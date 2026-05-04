@@ -379,12 +379,17 @@ let currentRequest = null;
 
 // ===== INIT =====
 async function init() {
-  showLoading('جاري تحميل البيانات...');
+  showLoading('جاري تحميل النظام...');
   try {
     const { data, error } = await sb.from('organizations').select('*').order('id');
-    if (!error) ORGS = data || [];
-  } catch(e) {}
-  hideLoading();
+    if (!error && data) ORGS = data;
+  } catch(e) {
+    console.log('سيتم تحميل البيانات عند الدخول');
+  } finally {
+    hideLoading();
+    // تأكد إن صفحة الدخول تظهر دائماً
+    document.getElementById('s-login').classList.add('active');
+  }
 }
 
 function showLoading(msg = 'جاري التحميل...') {
