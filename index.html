@@ -2344,7 +2344,7 @@ function saveSup(type){
     [['اغلاق','closeM();spT(\'sups\')','btn-p']]);
 }
 function copyC(id,pass,name,role,email){
-  var txt='السلام عليكم\nاستاذ/ة '+name+'\n\nتم انشاء حسابك في بوابة التدريب التطبيقي — جامعة الجوف\n\nبيانات الدخول:\n• الرابط: https://osamashahin.github.io/jouf-training\n• الدور: '+role+'\n• المعرف: '+id+'\n• كلمة المرور: '+pass+(email?'\n• البريد: '+email:'')+'\n\nوحدة التدريب والخريجين';
+  var txt='السلام عليكم\nاستاذ/ة '+name+'\n\nتم انشاء حسابك في بوابة التدريب الميداني — جامعة الجوف\n\nبيانات الدخول:\n• الرابط: https://osamashahin.github.io/jouf-training\n• الدور: '+role+'\n• المعرف: '+id+'\n• كلمة المرور: '+pass+(email?'\n• البريد: '+email:'')+'\n\nوحدة التدريب والخريجين';
   navigator.clipboard.writeText(txt).then(function(){alert('تم النسخ');}).catch(function(){alert(txt);});
 }
 function delSup(type,id){
@@ -2416,6 +2416,7 @@ function buildSupScreen(){
     {sec:'الادارة'},{id:'orgs',ic:'🏢',lb:'جهات التدريب',fn:"spT('orgs')"},
     {id:'reqs',ic:'📝',lb:'الطلبات',fn:"spT('reqs')"},
     {id:'stus',ic:'👨‍🎓',lb:'بيانات الطلاب',fn:"spT('stus')"},
+    {id:'forms',ic:'📋',lb:'نماذج التدريب',fn:"spT('forms')"},
     {sec:'المشرفون'},{id:'sups',ic:'👔',lb:'ادارة المشرفين',fn:"spT('sups')"},
     {id:'assign',ic:'🔗',lb:'تعيين الطلاب',fn:"spT('assign')"},
     {sec:'اخرى'},{id:'reset',ic:'🔄',lb:'اعادة التعيين',fn:"spT('reset')"},
@@ -2432,6 +2433,7 @@ function spT(tab){
   else if(tab==='orgs')c.innerHTML=spOrgsContent();
   else if(tab==='reqs')c.innerHTML=spReqsContent('sp-ct',null);
   else if(tab==='stus'){stuPage=1;stuFilter='';c.innerHTML=spStus('sp-ct');}
+  else if(tab==='forms')c.innerHTML=spFormsContent();
   else if(tab==='sups')c.innerHTML=spSupsContent();
   else if(tab==='assign')c.innerHTML=spAssignContent();
   else if(tab==='reset')c.innerHTML=spResetContent();
@@ -2447,6 +2449,22 @@ function spDash(){
   '<div class="card"><div class="ch"><div class="ct2">توزيع المقاعد</div></div><div style="padding:14px 16px">'+
   ORGS.map(function(o){var p=Math.round(o.used/o.seats*100)||0;return'<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:12px">'+o.name+'</span><span style="font-size:10px;color:#7B6FA0">'+o.used+'/'+o.seats+'</span></div><div class="pb2"><div class="pf '+(p>=80?'low':p>=50?'mid':'')+'" style="width:'+p+'%"></div></div></div>';}).join('')+'</div></div>';
 }
+
+function spFormsContent(){
+  var whoAr={student:'الطالب',academic:'المشرف الاكاديمي',field:'المشرف الميداني',supervisor:'وحدة التدريب'};
+  return '<div class="ph"><div class="pt">نماذج التدريب</div><div class="ps">النماذج التسعة المعتمدة</div></div>'+
+  '<div class="card"><div class="ch"><div class="ct2">النماذج المتاحة للتنزيل</div><div class="cm">9 نماذج</div></div>'+
+  '<div style="padding:12px">'+
+  FDEFS.map(function(f){
+    return '<div style="border-bottom:.5px solid #F0EBF8;padding:12px 0;display:flex;align-items:center;gap:12px">'+
+    '<div style="width:36px;height:36px;border-radius:9px;background:#F0EBF8;display:flex;align-items:center;justify-content:center;font-size:18px">'+f.icon+'</div>'+
+    '<div style="flex:1"><div style="font-weight:700;color:#4A2878;font-size:12px">نموذج '+f.id+': '+f.title+'</div>'+
+    '<div style="font-size:10px;color:#7B6FA0;margin-top:2px">يرفعه: '+f.who.map(function(w){return whoAr[w];}).join(' + ')+'</div></div>'+
+    '<button class="btn btn-p btn-sm" onclick="downloadForm('+f.id+')">تنزيل</button></div>';
+  }).join('')+'</div></div>'+
+  '<div class="notif ni2" style="margin-top:14px">النماذج المرفوعة تظهر في ملف كل طالب تحت بيانات الطلاب</div>';
+}
+
 function spResetContent(){
   return'<div class="ph"><div class="pt">اعادة تعيين الفرص</div></div>'+
   '<div class="card"><div style="padding:20px;text-align:center">'+
@@ -2569,6 +2587,7 @@ function buildAdminScreen(){
     {sec:'الادارة'},{id:'orgs',ic:'🏢',lb:'جهات التدريب',fn:"adT('orgs')"},
     {id:'stus',ic:'👨‍🎓',lb:'الطلاب (999)',fn:"adT('stus')"},
     {id:'reqs',ic:'📝',lb:'الطلبات',fn:"adT('reqs')"},
+    {id:'forms',ic:'📋',lb:'نماذج التدريب',fn:"adT('forms')"},
     {id:'sups',ic:'👔',lb:'المشرفون',fn:"adT('sups')"},
     {sec:'الاعدادات'},{id:'settings',ic:'⚙️',lb:'تعديل بياناتي',fn:"editProfileModal('admin','admin')"}
   ],'dash','ad')+
@@ -2583,6 +2602,7 @@ function adT(tab){
   else if(tab==='orgs')c.innerHTML=spOrgsContent();
   else if(tab==='stus'){stuPage=1;stuFilter='';c.innerHTML=spStus('adm-ct');}
   else if(tab==='reqs')c.innerHTML=spReqsContent('adm-ct',null);
+  else if(tab==='forms')c.innerHTML=spFormsContent();
   else if(tab==='sups')c.innerHTML=spSupsContent();
 }
 
