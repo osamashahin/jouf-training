@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>بوابة التدريب الميداني  — الكلية التطبيقية — جامعة الجوف</title>
+<title>بوابة التدريب التطبيقي للكلية التطبيقية — جامعة الجوف</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -148,20 +149,19 @@ tr:hover td{background:#FDFCFF}
           <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAACTCAYAAACgXE/WAAAACXBIWXMAAAsTAAALEwEAmpwYAAAgAElEQVR4nO19CZQlVZlmltM9M67tOLZt292O2o7aaLe2Oq2D2tq0Ij1dle/eVyS4r4gb7tjYikZkFohYForiUlS++7+qAsFyQ3DFBRcWFVwQEBUBESjAopStZEkg53w3It67ceNGxI0X8bbM/zsnzqnKF/vyf/f+y/fPzDAYDMYqwcL67mMDoXaGkpZ5oYHvQSDohkDSx8b9PBkMBmNkCNrqBUwc1Ax5CjqXX10Gg7FqEIrO85lAqBECCYT68bifJ4PBYIwMgegewARCTCAMBoNRnUBUmwmEmEAYDAajMoG0SDCBEBMIg8FgVMV8i9YzgRATCIPBYFTBhnXbHh5K6gRSnR0KdQ0TCXEQncFgMPKxvCYQ3YNDSZfozCGpbpmf7TwlWLv5Xgst9feBUMeFkpaYTIizsBgMBiNBEAT3CAWdGBPHNxZk5/GhUEH0f7oplJ23JMWFPCMhJhAGg8FIAIKICt7UF4JnBn+iSUXS84xCuLvmhWpFf+/sz7MQ4joQBoPB2DS3456hpF2BVHcvzC4+uhdElzSXJgr1S8xUIhJRZzOJEBcSMhiM1Y35tnpuTBA/Sf09QyDanbUffgtkd5YJhJhAGAzG6kYg1RGx6N/7PAjkVL1NENwjkOoyJhFiKRMGg7F6EQr6ehw836eUQIS6c0N78X/p7aQ6jAmEmEAYDMZqzr5S1wVSXb/54M1/WkYgMdG8E78fOdf580DSbUwixGKKDAZj9WG+3f2XmBSOz/yWQyChpIuSdQKhTmACISYQBoOxuqDjGEKdCQKYb9G/ViCQ5aBFT8A6C6L7JGRvMYkQy7kzGIzVg1DShrj244odczv+Sy6BCLo5lPSGQC4+LhTq4jjg/p5kvUDSDiYQYgJhMBirAwvrt/4jigPNmEYBgZyY/C0U6li7w16wvvsPTCDEBMJgMFZX6m4o1O1HrtvyF651DBfWWf3tui+JSefu/nbLa6CbxSRC3JGQwWCsfIAUYgLZmrdOQiCBoDsgqIi/LYitf9dP6e0ekKwbCHUhEwgxgTAYjJWNo2cX7wtSgAsLhJC3nhlED2Y7e/UVe9VVsRvro8m60NBiAiEmEAaDsbIRiM7a2A31maL1TAJBum9ve6kW46r0n/X/RiETCDGBMBiMlY1A0sdiF9Q/+ROIem5ve9E9IKlKx2zGJCVeyJ32LNSPR/FsGQwGY6hA2q4tnOiCVQfy7n7tCB1jz0yO+vcT/wcIhQmEmEAYDMbKhG4IFbmf3ly2bioGItQfA6nOC4Ta6ZI1AQJJ3x8CgSwFUv0ahBcKunRapVN4BsJgMBoHCvgiOXX18VDSaXFl+GmBIIVUW7iLghY9rKnjhUK9VBu0ducRZesWVaIbSz/FV6jDaxtaqX4eCvVBNK1Cb5KkuVXvGEFwD/w9boClW+9Ow8IEwmAwGkVMHJf7GVa6NhS0JRDdfW2jWgWBVO9HNbnX+fkQiKC7gjl6sN73ui2PHNC47gwFbUSle6VreSn990CoD4ybHJhAGAzGSIF+4wNrSEE9V6jDEXeoetxAqi9jduOzrucMBMH4g/v7p+96G1Wpzp6XXQl5+KBFIppxqc/F7qortctK0K9CQd8MBH0CLXbfK7b+z+w10RvHTRAeJMlBdAaDUR+h6Ly2EaMk6SY0gQrmtjzA99iRi6jz2mYJRG3r7X+2s1fsjruogABvDaT6Blx1oVDXVDTEd4JkFtrqf6fuqaSPjJskmEAYDMZQoUfbQv3RMRr/fSDpkxApDIX6z1AqQnW33yxF/SEU9K6Nz9l277Ljo4tg0O48uwkCCQT9LpTqB0jhtbdFr5ChGmVBN5sKwrj2QNJvx00UBcTHMxAGg9FMDYYxGr8d7qxNczvu6Vo/So/trNUuHCsDKktCdG0g1CHB3I7/mnf8UNAFG0T3b6sRiLoxEGphXqhW0FJ7gwSP3e/Y/1a07UJL/f3wjTLdEMxtfeg0uLKYQBgMRi3AsMPoGeRxa9BW/897+6gP+T6BoJM18eSPzi/N228o1dHYj8/x0mm8dAfiJ2hji3jFfEs9QycBtOnFgaT3IrifUuet6JoKB186/fu75QGTWovCBMJgMGohkPRUy6i8deB9zdGD44K+PblGS9KOYHbxIantPMmjSgwkPtZ3k+1QdDgy4yzoZjMrDfIq4yYLJhAGg9E4gha9rE8e9Js66bgJIKkeu7dyRt7a/XSIq2FUkwSCmoxku1DQq0ZqnNdteWTv2FJ9ftxkwQTCYDAaB6q/+wSiPtDsvhcfFwg6Pd+IIdi99VF1CSSQ6npUpNtV4XDN9c5FdP9ppMZ5NlEK1uR14rjJggmEwWA0jlB2Xt4zLkK9dBi3eF7SvydtZ53unha9bGACEep2M2UYgfSobiNqMLX54M1/ir+jd8goYxFHznX+PDmnUKqvjZsspoZAUFQTSNovaNH9x30uk4xgv+33K/odLz6yXQaZ5pvPwXyR9XHXbr4XAo0bWupvBtkvY2VhvqXWJQYFGU3DOg7eZxQa5upGCXXS++Y2/1n1GYi60V4nSjmOfj9Cbv/L3t+L6kBko4b5TvO7jXSzxk8YE08gQZseE+VhR1IAph+QYdwnSadGHw3dhXRJ+95AU6efa68ur0oiuO/Jc0A+/oLsPF7/fb/t90s+Ii1E55l7v9KQ8kkLddLMKoYZRDfl0YcFNIuKtbUcRk1djvOpNgOBbEk6RdiUEkHq7shdSYKuTI4JUhy4un+1EUhc7WmcIH1i3Oc0iQgl7XIJv/V/V59K3cdY18cXSGFMbS/VYrzfV+dlqawmpIq7hDpnZhUDAoauBk1DPaaWX1eHoGo9Y9Qk3Vbk0nLFQOwaErOuJWjRs5K/h1LNj8g4n9Y7lxY9a9xEMb0EItXx4z6nSQQqfI0P5vv276GgT5v30ZyG+yAUdGTqZRG0xZWJwgSi78P3ZlYxMLtN0m7n2/S0UR4bir69Puj2Imija+btIhCb+DBw7f0mu9JW/R2BYV7oHTNS6B07WUwFgejm9oJ2xye4q2qGxaokEKHOzP5OO8wHjbTIyi4sqa6Ptlc3Ji4s3XcaukP6A1W3mrILqwmWvMSqJhAAszCfboDDANKGQ0kbcgLcpyXdBYuzsLovSe2zRf/R+71Fr+xt21LPGIlhbvcLJic1A2siCQSAscNDDtZufuC4z2VSoXWCkgcp1HfKXFh2INwHcHvp52AXbc0dd5/5Fq3fsG7bw2dWdfc7JpBsO9nO08f1TODqCYS6KmPoBF1g9glxEoihvKv3JTv798lFHZH8/Yi57l8N3ShLdQsk3fV5BME9oFI8bqKYKgJhVCMQKICWEYhLLpoxOJhA7PsRuTbRKGqc71WUOQhpkoxRvj5J+PAikHbn2f1taUf/l+U1hodkeUjLZ5Ojzc92njJukmACWekzEKm+lvldqJNSH0gFaWy3n1m9WktsC3of/m3LTq82oOK6yIW4WgPpPi1lhw3EPXSDqexo+c7YNfXCMgKZl+o5vd+tRlWBUN8aqmFuqwPHELRnAlnFM5Av279DQjv1gQxQU4PpOgqqXCmE+BtGZlAwnVmFMDvuMYHE90TQBQhcz0wINFEIdavDOC5l/mbEOTLV9VLdbc7gQ0mbhmiQr0oKF6PzUOeNmyRKznd1uLAQT1lYv/UfF0T3Sfai5RIKpKInn0Do1FICKSk6tIHcd91utPwF2hm06AkzqwxMIDmZexNWEzMv1f/JxkXUH9AsKvW3VAX98hrbDWYWSEKpd4gG+fBUTdyE1n94EQhYNxTqTWgVqUvpBX0dSzQqpR3xckry92hRJ8Hl4fuAYXyQQRFK2h4K9RW9f0mn6n1HcgLb0YwmyQKqmp2BqWko1PkeN2NPINVnAqmeWOUYKJzSVaKCLjWXuGnOeVpF0/otvR79VHcwk/T6KoFui0BOyfxuZW7YmShFQPW65eMvfokk/danArgMWmtI0Eadgpx6p/KXQKp3+uwbo7pQdJ4PmexAqC9m96W+oN/BNr3NJ/NPP7+KLix0l4veiWoL0lT199Cil0EFYGZCAX89XHszEwaksEMzy3heF+LvgaQwRSq6myC0tZICWnc5Ady3Qwuer+0nDsWqxMtTRyBxkc5biySVixf16rKHujC7+GhkD1W8wV82synKMohy88OLFlSl6lHA8hqv45jpfrUXdSOIxOfYqf4LRtFR/3d1wqAzENeLGxGdOkr3SHBJSwt1rO/+M8eb2/rQQf3KCI6WX093X3PG4PUOoIteQRagKS3hQyBNdbLDaHqYciF1gXdjEuNjsb7VNpNAgKgY0WOUL9R1Zk2J7m3e2HdPyXu3MX2+WSKbeAKJAlDUrbfjYgJB0Y6r/aXfCdPv4HYq2j9Gw7U1axzyIC6AbJp/kcqNcbqBD33J/l2PpgeIgSB90CKnOI2xT2pRaiFttF7+3YO4ATFNr5mmuKv4PmEGSncN+K79Js8YQua7Sh0IKp2bez8gX0OvmplABIJeE0p6w8xEYnmN7ukh6ALzr/CyeL0PLbV3sk0ithg2tGhZIEMtwhXonwoCacIg2kU5JhbWdx/rkh+o+AFdWTQ6DKXanK+T03MNnB25B9RP4pG/K0hcqKkTvXzaLTKMh/P6ouOaRj4Q9NXs72kfL9xSZdeit2upva3zOMs1I4oHGqmZCPzNMxWAfs+WIR7gXaOf5e0fRY611VOFutjl/gul+mUVAgGBDzpoyjmv28sGUuNA/EwzM+JJgqvYEb3Xy++7mjfWTw+gZJODRp0qfO6Q7MrwCASxC7R4tD7Qa7XrQnQP9lpkZ3+8RHkPz5YljlpKUhekg/xsewmkOsiV1503Sg/k8X9tXwNG6EWuLx0raZHIThmz6bHO7dv0GD2raneePdACd6E1JUaleaELJT0D+XrmPgu1dZAZCFIIU/egTW/LPYeUD7m6Equ9ffw+nB7F3YreMXqefjeEaufdI/1Mk4r5/rInFPTR/HeN3uz6cHGejnP/RVEhpwtQL/Z6H1pq73SSh9onFOqDmffa8/0cNWBcpzE7L0pRLySQz/fX7R7cmBGWdBvsVrJvfEfjJobBCMRQoIw/5h82WYCGj8EigVtNobLih6sOsY1BUq1pAiN36+Gc6tvuEj2PrY90yXfkXhcwhCmjFN3/1+Stb86aED/I7M9yQ/oGue0Mk6LZJFwVqXXb6gWV9JNs11UBWVWF7mudHkTsRrZd+ZbLazIxIEG7bU2lVG8KTwKpi7g2YcmcJU+ipD6UCsbZigHxA3y3IDEMHCGPlJCxDvQ77EbfxZXW4rNsSU9zbl50ntkggXzMPIc4sWYKCcQcselgcrM6VIGgd1gnsKHK9pnZS7v7z451yFwHL0ylY1jZS6MUh4P+jfVinZK7ruEGDCR9u+w++BKI2Z40eg86z88/B/W6QQkkWL/4ZOtFbLQYDxlPvmTsdM8JdaH1LFLuTDPGNkpBSfu5YhY2s+KxvAaZVMiQDERnrS5qxexV0BZkz+H+a7mSKF23NPHHVTeVHtjQN53bGgWFUWZXA0ZY0M2m0GnFdruTQyDRR9MffRf5lgdFJjNo/eKTK25/SJlxC6U6I3WMiiMhO6tqlBkvGBmlH5D6Qd668IEX+eCj1OvqWViBUK9If2yd/fPPofPaQQkk4yoT9K6ZBoG4UPo6+i4Cv+3VgkUgz7N+v3AcYoq4x9YH/IqZFQJduCrVPnHiw0bdc0UXJzqLAQc3elL9vOg8ArntQa4sKztF2U42CQcjkHelGmZZXoipIRCdJ5/+sfGPIhB0ctrg0GOqbG9LKbs0/+3RQ1VfrO3GGyWBYOptvVw/cp5j1NSp0Bc+MIFIdZB1j8VwCMQqxmrQfQVEOf2DS7mYHelcrVpTCQSCzp0ZESBiWXRe0wC4lHVTKNS1QIRRqHMaMcbei7rcM5lkqahzIVz8YS3yUFdsmttxz6rZYBPrwrIUXlN5z00Age860++44NDYPivchkIx6yG9yXf/SEO1smuW0a5zZkRAFpN1f07IWe851nrbygjE24VlBQfRi3oYLixkSKW2lfShmQma7dr9VOxOeyZBIbuqSqFmHdjaSGavikkGan0iwUUt8rmrMQMW1XCk3VZ6do7jqM2JflscIN+AwtO4qPAiXVcWZStuCgW9HYMaXRiskxm6/2zbAnsgZrsTw6rnbnwvsQhkr0XDtBLIGcOcHtujJ/i9fUkqToPcmdp+trNX2RQfPkZImJTuH8WTkj5k36AiAzqEHPXTLKPqEKbTQbbTi3R8asVAojx+Z1+CJgkEmXopl6mg3zWZsODIktleRcbFchEu2TMY+13BzHVmBG0O7EzBSW35jMGYHhBhJifo3IEkOfAMdMW/OiPK1KRQz1pEd18oU6DNQHScrjS+mdsCSfsVnZu5ftUFBdBNzBgCHZDvp8fbMbspzcKyjAeKW3QWjl9VdhmcWvpCnVRmOOC/hkstfW70K9d5xW6gq+0XMRDqwzrt00iXRIA8km3uvFwH4tw36JAmrr3w+mYXH+JqGpPurbC8BkSopWPSL+JNrky5TLDVt5DQIoV50f23vHWzGW/qdVWu2yGXchZGqlX2UXAdT8y+a3RkWbEj3glTpiSvUBPPxlE39KFhyeZHMiFWYN+oqJ4EwB0Tu5k7oVDXVCMKdQ5SlREbg/tIk4NH9iTezyRGggGJj8s5CsQPYizpDrMxm541CF3JfnZFo3unWYuim+hZ2XVpte1pIZC1m+/lknyIpatPM/SvBluEOtN5EpJu0tNJxzaIaWBU4Tjx3NkRiKKxmxRJm8S6Vs0vsSZWXqX0Lm00onVuzjk/Z/B5UAKx4xq266aIQPQ5Igblo2OlCzhzjEkkQfPZOu9a3v51XVOUuWNto3XQfm6PlPGx5xXs2VmBPeMg1WVF+mdVllhnzSmbMe7eGwlQrQ+JmwqKAlfr+y3UWzVZ5KbVekjU9MgD9z2d6NAkgegML8dMf8AZzaaZtHDjNxzH+2K83+1O9eCJrUSH76/hrIfGT1qrzxbPijJB0BW4gHTzXIADz0DsWWiBOyBDICtyUYeVzIyvHsuzd8S9RolInFLPNr5X5p7SbjdBW2Dgm5ph6iB8HHjXs78K7vYCArkEs82o2FQdCpc7ZrJFHpL3zW3+Mzvjr+Sb/bUpiFnYYx12WKgArnp9Tk0qGQxTTBHTwkkN6MCFY2YuFEHnVE9wO8hai1Bbi+6DXYnuG19IOsv5xEBWNIFg5tmi//AUBe0XFY5ggTKs2TNi9P3HOy/PuPmy53gZXFIouGs6GQfxKEsCp5L2FhJjHOf7e11E2KJX6ta467Y8EgKY+G50kW+78wgUGtsqG4HsvqTCc7sbihXJttg/xEA9tvu1Tm+W2x4EXboRdESsL+euZRekWhxckbfxD/oCZElUjcfAyOIh62uBTEV085Mp4R744RGUxhQc2U1a6nvc15q/LGmXnujuW3bdusiq9wLSTfjwfe6XLaNQVEiJEeUE3JNh3OMvVZH1j94xdagra6epJZL8Ud9I2rKOA7F3Ip8so8HapmH2h9G1Uim5mfwZYhUC8X8O6ipzMLawvvtY720NSXhXpqCHgOZGrdKLSn+4/yZgkF/aUEp/HKLz9EB0XuSth1V7Ua/oaRS11LrhZJpkiSjST7LlRNQCUkBdjajsRYv3DaSH1f3n3H3GGltaE2nuuPtUGaUl225Yt+3h3ts9M/gTLQPSVgdG8Y98wo76rXTW5j1HTM9dmlPjWrQLJe+da9HL9ACiRutffU9mFx+imxgNqotmLfoZouFZxYZgTUJnQEp1vLszJd0GQwivxbBnRbGA5yl9txUdM8h+6hCI3XJ2Rgsfeng5hLrCzITMSO14L+onSfZp3CKgM86mU6umI6EPIBpp3aCzxn1ODMY4EXWm7Pc+MQzirVpk1ZAgHzZMnSrtNfCcVTeVheVS5QU8vBZLKSn4Ft2/SsM2h9H+oxnQj4Lt48naWtEEAv+018gUEimO5lZV9JMK+2vokW/nRZh+NnNljJUE3RNFd95UJ1RVZxgmdEqtVLc4yOMr6G/S5LEQY4hjah+JCwCPwQw2UVvWfTz63+Wv6tQMFRFI7BYqcduro839hWU90oX6z6J20zWM93FJfEnHaMYgg7KiCUTnlg9+cy5pwuCb0iqRam4zNTWMlQGtfxSlySfG5opxBchN6Na+mZRm+h0yk5o8DgLTrnTovkGn23T8s38ONyADq9YxcwgkXTS8vAZxYPPYrs6Brtop656dbtazNN8oSlGy/1jD60dMIA3B2XrVi1XphkF6sOeMqtL79mzJy1gdgFZb5h1p0cPGeU66L0r2m/hh09LxOuPJUeNVtDShTZdHIIhflUnaZOs4ZrLqF33yu9Z08cX9loah+bUplVasG+U1fozVNwMZhECgxY/MiiaOD32kVPdFQbt9U5AZqwNRkkqqu+QNZp3AOIoC7Tow1DkUNYkbBBiJDxL8xYxleATikEayZYP0d6w+WBqUF3QXkjKsBACn2kUTC1zxvXOeowePqnxhRRNI1NmOfuioAD87qobWRVDR/yV1MLppOmc9llo4H6mHyIlvct+MlQEUa2q1A6EuLJKOGc25WCrGgk5vOnYXjcQHLoq7qEyOZmAXlkN1IRZeLOyGGrRIONYJqnU7rGnIpfo9srKMa3wREwiDwRgZ7JE0BldNzzwAl+5btUW9us7xc4Pogl6VXVf9uCyIHmRdWKeZcQ9kSY0i1Ra1bmlxWEf2HM9AGAzGMKBlPPrG6Pph9DVH9lRdqSQQ21BcWEItZNaVdGqZ/lxoqDcgQ8yUDdJKBUb76SEb8zvNmi+7KRoTCIPBGAqiotCUW2nTKNo2D0ggd9dRPUa2Vc4M5KOZ8xXqw9nj0xvtjLUw+m2PGT9F4a/Z+ngki5EyPHixYiXSWrkxEAaD4QeoPYyiE2coO29pxnD15dCbIhBXUzPde91ez+qEGsZNvhA/atZVNxC5fiY9+2ECYTAYQ4at6QT5lGEcBwKVzRCI2SunmVlQINX77XXNAsYeuVq1MCH6mCTyKi16Vk90Mt2UbDQEIuirxr1+GBMIg8EYOnQRWkH1dFMolC+vYihrVOznutEEHVmmah3PfvbNbR8t1BVJDASZWKOfgVC3d17rF5/MBMJgMEYC3TSpb0wvHUZFvG4XXH+UfYNPt8LC1Hr3vjdkpetdDfbSs59ANzBLGfFP9ravp4YxwL3p90WxWzMM6XgcA2EwGHrEfGzKQLTpbcO4L3X7p2DEX+f4eQSiu1VCjh7Kw0J9Lu880Vra3F+AdbPrvbBfmJnTTbRxY06/M1WbXZ0OmUAYFbG8pm7hFcMwFgMqwE4DkLZrSotARaGu7pQL6OtTw5AtYRZTt3CznqHe+qjU9Qj1BYcxvyFJgx7FTMAkLX2Ns529RlJ7wjOQlQtIKWhJAx3MS0tQMwbOIIJS69VJsHSlAY2K0qNyddmR67b8RaPHQJFbhTaw6fOh99Y+fl0CsTSzgjw5d6G+kyhbmDU2o+ie6axfYQJhVIHddrQpja/VCMiX665wfeNw8cyKhG6Q9BXLQF1ad9RvI1aOvasieXyyTuyjKQIxG0MBmfuVvndvxzqBPP6vhyKkKNQ1dtvpQHb2HwV51J6BIBsBelKhVGfYEsfThKhnR/clmIoGUv0cD0Vr4Aj1pgpaRmdqFUzso8BlFPVpp3MjxUz1qUYvJHte15oPG53yhnm8lQy0uLU+nqvtdbRgnqCTob8Waa113jIzhYCBzPQ8hx9f0NubcofqjpX+xAFJ93c11QqhboFdpi+6cAgu9pc9Se8UqA83bMA/m/RL6Z1Li54wqsr32gSCxi+pnY2x7eaggMAhen/kvLjf99kHyNM3hx4GJrXuEH3qWi5b0B3RsUBW3IukDoxGQEtmR7gEcYtR4x1SX5uZUsAQpbKy+tf0S3vEW3nfctuD+v281eWB6B6A9NNAqJ3p70j9Gt9WMLf1oc1dWX0Cyc5A6JvFRpZO78/uitf1MtqSfosmddn7uvi4aPA7GvJogECoY+7MVIOcBuh+60X9CASd67OfQKgPFGVpFPUXGHZQFv5rO+jHGBTLa+AGPGKu+1c+tRTo3z3N9xrfc34mj/rafJueNsh+0X0x2c98i/7V/A2DUASfh9n2IPacDG40Da0rQHtgyrZr04t7we3eoK7ysge1JS65/9izMZJsr8YIJFVAM2UEohv55NzwaMqsrrMDU94EUtCMys4Zb1o+njE+ZGYggr457c8DLiuI8uUbPXWGTQJFwLrGtkN14Q6FQIS61Z7JB0Id7jHy35W4m1DxXslIS/V7JA+4+s9DnBKzt1ETRyMEgnaKqZ1Z/rjsg9v6qFic7CL0Wobip44dCPXWMtlojEyiLBh1GNa3p5GpdddufiD8tXpdSW9GjKPUlSTUVWDxQXofZFxYBU1v8NGY6/q4lTCL0P2pkSHTolcuiO6T/PWN1GHxkpHAxn2JeqaowwOpDvXtwhjFjNRB6HEAkoW7o3QbHUTsvAi+bK0d1KYX13FNQKgu6jWPPgtqM6qIj5Db/7J4my0PwH3E8fW5CzoG+ke4N66P062hFN1Pl5SGfu/SH9hSfH6HQfK7aICFVE+9LkaYBV0rowZUyJRSh+EdryMqWAWYVaPZWr5hpQvwLhWdj37fpPplvP7NeCdmxpWdOLDRTEu5J4A2lwf5bO29u073YGYg+zP9fc4dd58ZB9CHxHb7TRWB2MyXRyBR2h5GMerOgpt7zXy7+y95x7J7Caf7Fxe35JxvqWdYN/7+KdcVXuYarWarxEBMAkGetofA3Wed2SpCXYwXqHB7QZ8wt0FRk/k7Pnbtz+/v83YEi8uuN5Dqy0XqpJm2vlFyQiYnXf9NqK9U6TKHGVs8OMgECtGbusAVc3yRNhHeh0CqI4pciijUMtb/rv17fD+LDMgVrgGKHiCkjfFG79GzIxYzLKAyXQfSe/GLnPso6GQMxuyYqPZ9ZLAAABSBSURBVClM6Du7HzOB7In61eumUvgOX5U34Nv4nG33LicEdXfQ7jwb62Pw435H6FIMJIqy3mKRxM+OkziaIRChtpk7yxt9hFJ93POElvI6suksKU+1UOj4pNa1iMkOorlUOOsQSFG6rD3zyV+vu69X2p82Nu6X2n4+LkNtz4hCqT5fdK22vg6KzWyfcDpBoTwjBO4RzGhmSgDj6yraMgx0JmtOt/d0yFHkL/nJBua1uBIsskH07OLqsaFThNP34xh/Jdl6zZUG7ukh1dGlXQVB2HE2mp7lxYM2ZDoOQybFFzDiBQZxJ2yLqz967v7Wbn6gvxtJ/TLyiOiAOmpDlgJJ3wYxlxVt6lk8BkLmoG8lEQhcBNl1ugfkGIzzdLqjdTO0zo3DnWBXrxYRSCDoHUUEYqfT1R0N4WMq663cW1eok8x1XcYKriS4+LwfZI7khC0E55oZZQgBTWkKGgmh65kP+cIoZggQMz2hvhX3ht5l/XZX0FJ7l9znwoEIXGTZe0Bb7OtDgRf+rusK9Agz85E7jXIo1R8M43hO5t606P4lz2qPK+YF1+6gBOJDvMMCkglCqY7KPMsyoyPplKaLE5sikPjZXhe3GP6AdhO11N4YfOWlMAcVYhB4/xKPCDwzPskCUeBdHVejDfDEEsgJxQSii5JSejLQjTFnKnBxxERinthHssdK9/gNZHfWl0DsquFAqEMcRuNGPTUXtDuQ9AvIOPvfh3S/4yKlUJtAsoVR+p6lBdgE7YbfHiN6PfXN/K5udfmT7Rc7b2YEo14kKpceeepKbGcHtNR1SjrNMoonY/vkd4xAMx3THEY5AeI+thsMrjQEZXVaaIselnNtVxW5fGAUXIVzzn2ZrhsXgeg4Xer87tbBT9mdRcwELkn3OdYgEEM8b1zQMTGhXuH4josXKNdKOhWuQ7i84GJtolCwWiC/EvHdhkGzeY6b8R5Luin/GulSZF7CJsF15hpku4D3UmdW+WR4TSuB2A1TbBfW/GznKfbBXD7mKP3RdA+o6+2Rmu3CKiKQKNCZHwMJJb3B48bc6ZshBSORMtSzi4/2JZDMdYrO062P7BrbSMdxgE+XGX07ySFviuyQt77a/ZzSsSWcg3t/nUeYxh7PPe9exv7l/n3PCcjbGX+YjfgkIOBarGv73rzY+n9t1xiaBGE0rYPrUh3qPAeprjfe0bOdBXjp+/OjGQ/YjX+KCCTTjlWol85MEPCuYkaM+1O10jy+r7eAnPG8dXaTpBfieTU5Y6kXRE+7goPIfXUtJF8woNGzFqkOQoqzOWDyAQYg2mOj7aox253gpW4Q/ZNFBBIIeo/vaCnjDrNGa9EH7kcgdtMa2zXiRyB0g+99QAaQ7wzEjoHYhjV2CeR2P0tnmvV7S7t88rbRzSe25TWYslvHtQL0y2vimVlvHdsQ944r1UHWc/+cJhV7ibLyvujjjjNdTQhm+9YJuPo5RIaXLsCoEC4874FCKoieJRDHDCTVoc5X4rwoJgf3WpnbbrJS5esp71r38xb93DBrAcEgHRbtZIV6KYg1kPRU2A3YIZ3empMQ4dnUakmn5iK7TKozdPq9oI/m1WHUAVz2+A4Ka9KmhUDg14xuMFIVuwcXjfIy7hhremZ/vEWFR3YcAbOX9O+dl/sH0ZGlk78vZA05ZBq+bi6YVpc8d+PcaEPKUBcEwzK9A6wpe+b3guwwPcrrP8idZYWeha416/5iNFU07XcZ0N552a6pSi8kfcJ5fmmy1P0W/P30mVmITSa7tQSJ7L6kKJ3c8vWfZf9+9OzifYvuYR42tNTf+CogxEFU49w7z5+ZUOiZcpLAEMW/INS4CTGwSjG++sseXUsh1M447XVJZ4m1O89GfFS7RxFnwKBmbssDykoKBsfyGtgG7e6DZHycvRhLvleerU0kgQRSvTO1QkGOf6aWwiIQR6OVp/oaHTud1J6BFAbRpTo0ta/1i08umYG8fqYGkp7IfkF0qxI9QyBWiqyjhsXYlyGLoG4sC3gXEhtiAaahFXSXGUzPPsvO/r5ZaRWX7c700fS7sThTAagPid15pdkr2h2R0y7VdGH5EAiybHzP0daegivD5R6yR6mu9SYFqH0x7muY0Q1b3/2HKKEFkkjqJyPLLsqJcTWNo3SRn9onKjSkL9npz1HqeBS7tG3p1BKIbQwh9+FrDPEBFWXNIAjsbYStlNNMGq/Vl7hoRmCToB1ELzKGPsi46oq0sKT6jHHz78xUtdoEUlCXADmJIgLJZCCVtAG1Y0fJR48AtVmJDH9vkdsn05hI0lkgacxoCxepDrJrVXrpu+mX9oSZAaBHetEI+LclBma3y+duzkBQAGv/DreadZ5f9D232N9vnIO6XRd4ztGDQaBx6nlWs62tDpyZQMS1X5FbVNDuosJf8/6hYDEqmqX36Cw5ZGsWBakHMXqSftHUde4AEc529pqXXRl/P52oOLrv7iw5l49hP/HMJL9ObmpmILZKplbBdCPl39Ql/mlgqpa+WeqdefvSudDGurbekF1AhRlL/r7S+j22MbAJBNPZmRqwff55xV34qFI1CYKutNexM4JGSSB2lpXOkoEhyKbuvrnwftgxKKEOn6kFnTPfm+JjtFZ3f3Br6uJWbaBcjXfUYYUxEAeBZEmGfuObVQS/ujuluGSZUALBAK/J/uqwB3A36XR+BOmhIiDUCXEG4UVRpqLnPUOabl5KbovuD5ciBrA667FFAu5drWgBQo8LAY2BzSW1DDBmIbEig53VOp0EMtvZK32zaberLiOTVivUt5xCfqkOZ+p6l08/9bJF+7owRybCnOLucqWuYsZkXeQl2XO3ZyBZZcsqQHqsZXwud1Xl21lMLkNoN9opklZJy0g7XVgpf7lPdzmbdPSI3Zx9CLrBnmnagGy89Q79KN+QLq9BllzkOlXzrrTgWL7jzrLsL7fUA/3G2PYSZPxlzrdNT8ukCDvaplourO+5jmkXOkZxRD+A4G0Jfg8DVOvdHQ6W18QuKf2dDi+mkAa+FQyCQACoQ0JsA4keMPp4F3TcQ7de0O6iXVGKrboujo94jv7VGcnx9GxJNmGEo7gf6r/GTQiNZGHZs4GovL57AAghcgNoLaE7vLKFLCMWp7y9DhlBkXY9bTADpPFJvdW5L7v3MEbIovMiGB0YcbhcMucl6B2lBNJWL6j78mbSUSFF3VYHwv+ui5CE+rBtpOCWKJ5V0HJRtlFU5ds37KUE4tFQqvQl9uz7AiVj636833bXxVk630m/R9liwnhmZL4fn/M5B+1jzxqAH9hVxlrnKTMLUUc5rml3GYEgNmcdE4OeDTBqcHdEs+H8xJQ4znHKNM9AzISLJjoITkodSGxzPpjsJxCq3YghhrsyfiebkHsfO4EgrbBKShkKiPJ84lrAriwLJn0zz8+TOdBpnxWyN+DrdAspZgoJe72EBwUMX8Ug4Gmu/dgEUjR6S7nqBN1c2q+lIDaT3q+uFHed8xIMoc8+4hogS2VAXYjsNiQxRDpdlsyJUN9x7WtQAnEVNMbb/zH2r78/Sgm1KnxRFe+WfflDkRZW7/6VtGv1aYcbEbkWbkSAeTNiAno0bc38J5FAjOzMpaZ7eTQBxOMGNZimu9tu/xvWWiKXqcODMp11IDooVCA+Z3xsl+b1R0h9DB4+Shj8MgOlC6msGUvOhV2VV/kbis5rh5FLH1Xjlk+FdUFljn6U3d2syF2UGq24YlD2DMSzLalLfiY+xklV7geI2bv3AWaTOdXkdQgkbiXqFdCM3+e78joJWlpYuQSCOoQi5VokhPief/Z60u1KJy0LS197onlV4TmNCtGsdPAiPTM7NFYWX24ysB+lPlcYcE9yISHSX6PWq84NYSi3+1Zbam0kSd/POZElGDvffiLwbdouI9MARDn9WV93XkZXk7n0kbRGuuCuf8/oDhQjFRUiVUvjNQLubgJZHKQnOgL3UQGVdV89lHoz+4KOUKEMuB6kbC+SU88QiKQdlc4B1cKCjikyHHifY1mN3Gs0B0GumF+2Kl3LzGfy+4tS0MsARdj0eXfWzkwQIGjZOzcj4DwJ0MrQlYQ1He+JEdvE+xI2aIyTOrmq/UImvhI9ckfo6fTHscAFNKj8ua66jdRyN0HzChkOReJ9ZeeF4CuExuCb9D2vSHZbfRyGqApx+SLqja3VdKGRtT25Zz7un1iqYrs+N0f8JivJoD4V1Whks4bi3xMXyPuqKKBGKrY6PrVVK/bGHdUGQZzJ9cS4avhYTWxR9f4L/QYgqIJX79fBT0EnFsn+l/cx0f3rD0f6ZJQwoI7CAMKnH0iUoRjdz6J2Aqlt5rY+NJJAp65O4cYAwuNYeYBacuoD9ujFMkokAw8t7TECXStfIN5o1/Ho51IhdRbuc3Oful+HbNAYx/VN2aScFSplwmAwRgddH2FqjCEhZYKMtJm0UD91uzmkiqOjGeElGDzo39rqBb4kAhn69H6brU+BizQZ5OFY4yYHJhAGY8qgE1isAkvdT8PRlKuormocMDXh8uKPo4QWyTSaqmk3pZYR0c2ceooHMYmUS6UL9RXv5mFyUIMcqSDYmniTuvAMhMGYIOTG9jLGjH7kKyg5KiRFdfZIfRyA6zAlLy/oyiRFPJFYMfsAxcH1qN1u/vIRK+tyuXGDnKg/SHrquMmBCYTBmDIYBXgFRkadV6Vj3ihgCkJGNT8TFO8Q6hzUYyW/I+ZlEMuJSVV6rIr7rfzRdr8oNBD0miEZ5e/1pWAqZA8ygTAYjEyzsLS7YCcSKyZt5mEX1RXp5w31HCAVJFSQlr1R2+xMxhSBxJpliWRQrGfWccnbmO0LdBLGUEb0dEeSuh8l4IyfJIrPl4PoDMbEAMWyKFYzFzT8ilKwyxtojQumz74ohX5Y0E3pjLR2HRjPbfWcJpBoUT8w1cR1qn+qhYC6O5g77j6934U6c1hGeT5WqLDbeE/iwgTCYDAaMOCJyrS6fNS3E6nZuvlTnwz+gDT6gvWfl1/M2pfSgWIA/paVgEcDNrpheIa5owtZY6mnsZMEEwiDwRgqkhE5lBRGdavhmtL1X6a7SaiLMYsr3C6PQKJlKQquR7M9FP1GLq1+8SoUE4ZqlKU6Xh9n7rj7uJWiJ2fhGQiDwWguAyuno2TTgK4bdPNSBk3QiWVK0R4EkuzrS2bVuamKjXbawyUQ6snkWMWPE7cwgTAYjNowXEjvHubtRKGdbuBm6PTpGg5Br/I+17Y60MtACroSrQYG7Km+XGPZ1TvXlGtu8hYmEAaDURu9ZlhCBcO6negz45APOavMZTUwgUTLEvS9zO11fxFfkVA5oGHeb/v99LGiHu5jJwomEAaDMTQkAqIQrWx637qnvaAtpuRIJMmvDi1qrdwQgWC5yN6H1quyetmEjRlluiO5LruP+qQtPANhMBi10Vfa7nfsq71PHUSmMNMDSKgvuDpXeu83r11B7qI+ni/y2UW673WNGmWpLusrOo+fJJhAGAzGUBEpdUc9vs2q70EQ60y92zbMukFcA/L1VQkEvZGsttSnme20j4raDXykShO+YgKhU/WxOI2XwWCsBpiZSWivMNA+2p1HxK2fb7GbwyFInlSLj5hAljATyCoF6FqTgxMZlH7zMvVhn4Z3hUuLXqmPJTsvH/cMg2cgDAZjBEBxnbrQMPqHeLupWvSyQNK3s2rD9NtA0hublm5BdX8FA3lm71z3234/R9vqS+DGMmMxmIEhFlSl/XZvEer8JGUYqcTjJggmEAaDMRIgSyo1+hb0JTTe2vicbfdO1oFx1L3d4QoS9GmXkQURadl1Y3Q/PgKh9/S2K+hXHsC9Bll4oz8L2lbrvul2d8988rg46SEfN8ub6CLC+FlxQykGg9GQcW7R+lDSnqyxUTeGgm4uMNR3oPPlvOg8c9jPogqBLMjO45Pt4i6q5SQg1CFJGm4CBP21y0uLMKozYpLciUJBnYDQprclMy1ocnlIy0/EwgTCYDAahe6tIeibPiNoGE8Y3EHaSkPSfoPo/m3l7WRnf88ZwfnuTDOfbelmVOXjXlQ5t4ho6KfjJgYmEAaDMVbAuEN+PhTqJN3nRKjzA6nOxv/1aLzdeUSd/UNqBHLtwyIQ1JlYAXLv/ulhej/nhVIdhqyqpGVt5pzWbXlk3NHRMXub3IVnIAwGY2oRCPoqxA2bJhDd/tZo2oUe740YXaFu1/3OhToHzasw20Bv+3ETARMIg8FYdQilenXVtGGvGYjR/zwqGFS/HrexDidw4RkIg8GYWiB2omsyjMI+z0B/mXF8YaovyAQY63ACFyYQBoMx1QiEOsHs11GXQFBRbmZRIc4ybkMdTujCBMJgMKYaqCuBMZsX3X9rZAYi6EireHCqAtshEwiDwWD4Q6cDS3UZivdK1xWqXTCi3mlWviPGMm4jHU7wwjMQBoMx9Zhvq+fGBu1zSTvagQhE0nvTLXPp0nEb6XCCFyYQBoOxovqyh7LzlqL1oK6bYwx3ogo8WQ+1G+M20OGEL0wgDAZj5cRCBN2ll7Y6sCqBQOLE1Oya9Hay4QQsTCAMBmPFIJBqsVewJ7r7+hKIncXVWOGgXNkLEwiDwVgxQDMqCBTGxu2PyLiy1wlaJNJGkL6a7uuh9hlUtiRcZQsTCIPBWFEIpDqoZ+CkujuQ1DXlTsw0Xi0nYtZ8zC4+ZJqlRUImEAaDwajb3IpOtkbKdwZSfQP9PWKl4LMDSfuZWx09u3jfUNC54zbK4RQtPANhMBgrDnEQ/AtOwyfUrXa/DqwPghm3QQ6nbGECYTAYKxLoDhhKejekSSwCuThLNvTpcRvjcAoXJhAGg7Gigb4jUOwNJe3SRk/Stehhjn4loVTzoVBXjNsQh1O6MIEwGIxVAZAGOgQGUh0ftZKd/J7j4YQvTCAMBmNVoUjKhBdiAmEwGIw8zAvVYqIgnoEwGAxGVeRJmfBC7MJiMBiM2i1teVnmGAiDwWBYgNAiEwSxC4vBYDCqIpD0PCYQaohA6Kf8BjIYjFWDBbH17wKhrmISoXrkIemmQNIp/x9mM048uZDFUgAAAABJRU5ErkJggg==" style="height:48px;width:auto;display:block" alt="جامعة الجوف" />
         </div>
         <div class="un">جامعة الجوف<br><span style="font-size:14px;font-weight:400">Jouf University</span></div>
-        <div class="us">وحدة التدريب والخريجين — الكلية التطبيقية</div>
+        <div class="us">وحدة التدريب الميداني — الكلية التطبيقية</div>
       </div>
-      <div class="feats">
-
-        <div class="feat"><div class="fd"></div>جميع الحقوق محفوظة @ د. أسامة شاهين  </div>
+      <div style="position:relative;z-index:1;margin-top:auto">
+        <div style="font-size:13px;color:rgba(255,255,255,.85);margin-bottom:10px">جميع الحقوق محفوظة @ أسامة شاهين</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.55)">الإصدار الأول — العام الجامعي 1448هـ</div>
       </div>
-      <div style="font-size:10px;color:rgba(255,255,255,.35);position:relative;z-index:1"> الإصدار الأول — العام الجامعي 1448هـ</div>
     </div>
     <div class="lr">
       <div class="lt">تسجيل الدخول</div>
-    
+      <div class="ls">أدخل بياناتك للدخول إلى النظام</div>
       
       <div class="fw">
-        <div class="fl">الدور الوظيفي</div>
+        <div class="fl">نوع الحساب</div>
         <select class="role-sel" id="role-sel" onchange="setRoleFromSel()">
           <option value="">-- اختر نوع الحساب --</option>
           <option value="student">طالب / طالبة</option>
@@ -174,11 +174,11 @@ tr:hover td{background:#FDFCFF}
       </div>
 
       <div id="err-m" class="em">بيانات الدخول غير صحيحة</div>
-      <div class="fw"><div class="fl" id="id-lbl">الرقم الجامعي</div><input class="inp" id="inp-u" type="text" placeholder="ادخل اسم المستخدم" /></div>
+      <div class="fw"><div class="fl" id="id-lbl">الرقم الجامعي</div><input class="inp" id="inp-u" type="text" placeholder="الرقم الجامعي" /></div>
       <div class="fw"><div class="fl">كلمة المرور</div><input class="inp" id="inp-p" type="password" placeholder="رقم الهوية الوطنية" /></div>
       <button class="bl" id="login-btn" onclick="doLogin()">دخول الى النظام</button>
       <div id="hint" style="margin-top:12px;padding:10px 13px;background:var(--pb);border-radius:8px;font-size:11px;color:var(--mu);text-align:center;border:1px solid var(--pbo);line-height:1.7">
-        اختر نوع الحساب ثم ادخل بياناتك
+        أدخل بياناتك للدخول إلى النظام
       </div>
     </div>
   </div>
@@ -204,6 +204,7 @@ tr:hover td{background:#FDFCFF}
     if(s)s.classList.add('active');
   }
   setTimeout(go,100);
+  setTimeout(function(){if(typeof sbInit==='function')sbInit();},500);
   document.addEventListener('DOMContentLoaded',go);
   window.addEventListener('load',go);
 })();
@@ -211,7 +212,7 @@ tr:hover td{background:#FDFCFF}
 function setRoleFromSel(){
   var r=document.getElementById('role-sel').value;
   if(r)setRole(r);
-  else document.getElementById('hint').innerHTML='اختر دورك ثم أدخل بياناتك';
+  else document.getElementById('hint').innerHTML='أدخل بياناتك للدخول إلى النظام';
 }
 </script>
 <script>
@@ -1527,17 +1528,18 @@ document.getElementById('modal').addEventListener('click',function(e){if(e.targe
 // ===== LOGIN =====
 function setRole(r){
   curRole=r;
-  document.querySelectorAll('.rt').forEach(function(t,i){t.classList.toggle('active',['student','academic','field','supervisor','admin','ceo'][i]===r);});
   var lbl={student:'الرقم الجامعي',academic:'اسم المستخدم',field:'اسم المستخدم',supervisor:'اسم المستخدم',admin:'اسم المستخدم',ceo:'اسم المستخدم'};
+  var ph={student:'أدخل رقمك الجامعي',academic:'مثال: acad001',field:'مثال: field001',supervisor:'اسم المستخدم',admin:'اسم المستخدم',ceo:'اسم المستخدم'};
   var hints={
     student:'أدخل رقمك الجامعي ورقم هويتك ككلمة مرور',
-    academic:'أدخل اسم المستخدم وكلمة المرور المرسلة إليك',
-    field:'أدخل اسم المستخدم وكلمة المرور المرسلة إليك',
+    academic:'أدخل اسم المستخدم وكلمة المرور المرسلة إليك من وحدة التدريب',
+    field:'أدخل اسم المستخدم وكلمة المرور المرسلة إليك من وحدة التدريب',
     supervisor:'أدخل اسم المستخدم وكلمة المرور',
     admin:'أدخل اسم المستخدم وكلمة المرور',
     ceo:'أدخل اسم المستخدم وكلمة المرور'
   };
   document.getElementById('id-lbl').textContent=lbl[r];
+  document.getElementById('inp-u').placeholder=ph[r];
   document.getElementById('hint').innerHTML=hints[r];
   document.getElementById('inp-p').placeholder=r==='student'?'رقم الهوية الوطنية':'كلمة المرور';
 }
@@ -1548,22 +1550,53 @@ function doLogin(){
   var err=document.getElementById('err-m');
   var btn=document.getElementById('login-btn');
   err.style.display='none';btn.disabled=true;btn.textContent='جاري التحقق...';
-  var ok=false;
+
   if(curRole==='student'){
-    var st=gS(u);var cp=STU_PASS[u]||(st&&st.national_id);
-    if(st&&p===cp){ok=true;curUser=u;curStu=st;buildStuScreen();showScr('s-stu');}
+    var st=gS(u);
+    if(!st){err.style.display='flex';btn.disabled=false;btn.textContent='دخول إلى النظام';return;}
+    // Check custom password from DB first, then national_id
+    sb.from('student_passwords').select('pass').eq('student_id',u).maybeSingle().then(function(r){
+      var cp=(r.data&&r.data.pass)||st.national_id;
+      if(p!==cp){err.style.display='flex';btn.disabled=false;btn.textContent='دخول إلى النظام';return;}
+      curUser=u;curStu=st;
+      loadStudentData(u).then(function(){
+        buildStuScreen();showScr('s-stu');
+        btn.disabled=false;btn.textContent='دخول إلى النظام';
+      });
+    });
   } else if(curRole==='academic'){
-    var ac=ACAD_SUP[u];if(ac&&ac.pass===p){ok=true;curUser=u;buildAcadScreen();showScr('s-acad');}
+    sb.from('academic_supervisors').select('*').eq('id',u).maybeSingle().then(function(r){
+      if(!r.data||r.data.pass!==p){err.style.display='flex';btn.disabled=false;btn.textContent='دخول إلى النظام';return;}
+      curUser=u;
+      ACAD_SUP[u]={name:r.data.name||'',pass:r.data.pass,email:r.data.email||'',students:[]};
+      loadAcadData(u).then(function(){
+        buildAcadScreen();showScr('s-acad');
+        btn.disabled=false;btn.textContent='دخول إلى النظام';
+      });
+    });
   } else if(curRole==='field'){
-    var fl=FIELD_SUP[u];if(fl&&fl.pass===p){ok=true;curUser=u;buildFieldScreen();showScr('s-field');}
+    sb.from('field_supervisors').select('*').eq('id',u).maybeSingle().then(function(r){
+      if(!r.data||r.data.pass!==p){err.style.display='flex';btn.disabled=false;btn.textContent='دخول إلى النظام';return;}
+      curUser=u;
+      FIELD_SUP[u]={name:r.data.name||'',pass:r.data.pass,email:r.data.email||'',students:[]};
+      loadFieldData(u).then(function(){
+        buildFieldScreen();showScr('s-field');
+        btn.disabled=false;btn.textContent='دخول إلى النظام';
+      });
+    });
   } else if(SYS[u]&&SYS[u].pass===p&&SYS[u].role===curRole){
-    ok=true;curUser=u;
-    if(curRole==='supervisor'){buildSupScreen();showScr('s-sup');}
-    else if(curRole==='ceo'){buildCeoScreen();showScr('s-ceo');}
-    else{buildAdminScreen();showScr('s-adm');}
+    curUser=u;
+    if(curRole==='supervisor'){
+      loadSupData().then(function(){buildSupScreen();showScr('s-sup');});
+    } else if(curRole==='ceo'){
+      loadSupData().then(function(){buildCeoScreen();showScr('s-ceo');});
+    } else {
+      loadSupData().then(function(){buildAdminScreen();showScr('s-adm');});
+    }
+    btn.disabled=false;btn.textContent='دخول إلى النظام';
+  } else {
+    err.style.display='flex';btn.disabled=false;btn.textContent='دخول إلى النظام';
   }
-  if(!ok){err.style.display='flex';}
-  btn.disabled=false;btn.textContent='دخول إلى النظام';
 }
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.getElementById('s-login').classList.contains('active'))doLogin();});
 function showScr(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');}
@@ -1609,10 +1642,23 @@ function saveProfile(role,user){
   var email=document.getElementById('ep-email')?document.getElementById('ep-email').value.trim():'';
   if(p1&&p1!==p2){alert('كلمتا المرور غير متطابقتين');return;}
   if(p1&&p1.length<6){alert('كلمة المرور يجب 6 احرف على الاقل');return;}
-  if(role==='student'){if(p1)STU_PASS[user]=p1;}
-  else if(role==='academic'&&ACAD_SUP[user]){ACAD_SUP[user].name=name||ACAD_SUP[user].name;ACAD_SUP[user].email=email;if(p1)ACAD_SUP[user].pass=p1;}
-  else if(role==='field'&&FIELD_SUP[user]){FIELD_SUP[user].name=name||FIELD_SUP[user].name;FIELD_SUP[user].email=email;if(p1)FIELD_SUP[user].pass=p1;}
-  else if(SYS[user]){SYS[user].name=name||SYS[user].name;SYS[user].email=email;if(p1)SYS[user].pass=p1;}
+  showSpinner('جاري حفظ البيانات...');
+  if(role==='student'){
+    if(p1){STU_PASS[user]=p1;sb.from('student_passwords').upsert({student_id:user,pass:p1,updated_at:new Date().toISOString()});}
+    hideSpinner();
+  } else if(role==='academic'){
+    if(!ACAD_SUP[user])ACAD_SUP[user]={name:'',pass:'',email:'',students:[]};
+    var upd={name:name||ACAD_SUP[user].name,email:email||''};
+    ACAD_SUP[user].name=upd.name;ACAD_SUP[user].email=upd.email;
+    if(p1){ACAD_SUP[user].pass=p1;upd.pass=p1;}
+    sb.from('academic_supervisors').update(upd).eq('id',user).then(function(){hideSpinner();});
+  } else if(role==='field'){
+    if(!FIELD_SUP[user])FIELD_SUP[user]={name:'',pass:'',email:'',students:[]};
+    var upd2={name:name||FIELD_SUP[user].name,email:email||''};
+    FIELD_SUP[user].name=upd2.name;FIELD_SUP[user].email=upd2.email;
+    if(p1){FIELD_SUP[user].pass=p1;upd2.pass=p1;}
+    sb.from('field_supervisors').update(upd2).eq('id',user).then(function(){hideSpinner();});
+  } else {SYS[user].name=name||SYS[user].name;SYS[user].email=email;if(p1)SYS[user].pass=p1;hideSpinner();}
   closeM();
   alert('تم حفظ التعديلات بنجاح');
 }
@@ -1745,8 +1791,19 @@ function applyOrg(orgId){
     '<div style="background:#F0EBF8;border:1px solid #D4C5E8;border-radius:9px;padding:12px;font-weight:700;color:#4A2878">'+org.name+'</div>',
     [['الغاء','closeM()','btn-o'],['تأكيد','doApply('+orgId+')','btn-p']]);
 }
-function doApply(orgId){REQS[curUser]={orgId:orgId,status:'pending',date:new Date().toISOString()};closeM();stuT('orgs');}
-function cancelReq(){if(confirm('الغاء الطلب؟')){delete REQS[curUser];stuT('orgs');}}
+function doApply(orgId){
+  showSpinner('جاري ارسال الطلب...');
+  sb.from('requests').insert({student_id:curUser,org_id:orgId,status:'pending'}).select().then(function(r){
+    if(!r.error){REQS[curUser]={orgId:orgId,status:'pending',date:new Date().toISOString()};}
+    hideSpinner();closeM();stuT('orgs');
+  });
+}
+function cancelReq(){if(!confirm('الغاء الطلب؟'))return;
+  showSpinner('جاري الالغاء...');
+  sb.from('requests').delete().eq('student_id',curUser).then(function(){
+    delete REQS[curUser];hideSpinner();stuT('orgs');
+  });
+}
 
 function stuForms(){
   var fd=FORMS[curUser]||{};var fs=fStatus(curUser);
@@ -2122,13 +2179,27 @@ function orgModal(o){
 function saveOrg(id){
   var n=document.getElementById('o-n').value.trim();if(!n)return alert('ادخل الاسم');
   var s=parseInt(document.getElementById('o-s').value)||20;var e=document.getElementById('o-e').value.trim();
-  if(id==='null')ORGS.push({id:Date.now(),name:n,seats:s,used:0,email:e});
-  else{var o=ORGS.find(function(x){return x.id===id;});if(o){o.name=n;o.seats=s;o.email=e;}}
-  closeM();
-  // Refresh current view
-  var t=document.getElementById('orgs-tbl');if(t)t.innerHTML=spOrgRows('');
+  showSpinner('جاري الحفظ...');
+  if(id==='null'){
+    sb.from('organizations').insert({name:n,seats:s,used:0,email:e}).select().single().then(function(r){
+      if(r.data)ORGS.push(r.data);
+      hideSpinner();closeM();var t=document.getElementById('orgs-tbl');if(t)t.innerHTML=spOrgRows('');
+    });
+  } else {
+    var o=ORGS.find(function(x){return x.id===id;});
+    if(o){o.name=n;o.seats=s;o.email=e;}
+    sb.from('organizations').update({name:n,seats:s,email:e}).eq('id',id).then(function(){
+      hideSpinner();closeM();var t=document.getElementById('orgs-tbl');if(t)t.innerHTML=spOrgRows('');
+    });
+  }
 }
-function delOrg(id){if(!confirm('حذف هذه الجهة؟'))return;var i=ORGS.findIndex(function(o){return o.id===id;});if(i>-1)ORGS.splice(i,1);var t=document.getElementById('orgs-tbl');if(t)t.innerHTML=spOrgRows('');}
+function delOrg(id){if(!confirm('حذف هذه الجهة؟'))return;
+  showSpinner('جاري الحذف...');
+  sb.from('organizations').delete().eq('id',id).then(function(){
+    var i=ORGS.findIndex(function(o){return o.id===id;});if(i>-1)ORGS.splice(i,1);
+    hideSpinner();var t=document.getElementById('orgs-tbl');if(t)t.innerHTML=spOrgRows('');
+  });
+}
 
 function spReqsContent(ctId,myStudents){
   var allReqs=Object.entries(REQS);
@@ -2165,11 +2236,23 @@ function spReqsContent(ctId,myStudents){
   return h;
 }
 function spDecide(sid,status,ctId){
-  if(!REQS[sid])return;REQS[sid].status=status;
-  if(status==='approved'){
-    var o=getOrg(REQS[sid].orgId);
-    if(o&&o.used<o.seats)o.used++;
-    sendOrgEmail(sid,REQS[sid].orgId);
+  if(!REQS[sid])return;
+  showSpinner('جاري الحفظ...');
+  sb.from('requests').update({status:status}).eq('student_id',sid).then(function(){
+    REQS[sid].status=status;
+    if(status==='approved'){
+      var o=getOrg(REQS[sid].orgId);
+      if(o&&o.used<o.seats){o.used++;sb.from('organizations').update({used:o.used}).eq('id',o.id);}
+      sendOrgEmail(sid,REQS[sid].orgId);
+      var s=gS(sid);
+      var hasAcad=Object.values(ACAD_SUP).some(function(ac){return ac.students.indexOf(sid)>-1;});
+      if(!hasAcad){setTimeout(function(){alert('تم القبول!\nالخطوة التالية: تعيين مشرف اكاديمي من تبويب (تعيين الطلاب)');},500);}
+    }
+    hideSpinner();
+    var c=document.getElementById(ctId);if(c)c.innerHTML=spReqsContent(ctId,null);
+  });
+  // early return pattern - need to prevent double execution
+  if(false){
     // Remind to assign supervisors
     var s=gS(sid);
     var hasAcad=Object.values(ACAD_SUP).some(function(ac){return ac.students.indexOf(sid)>-1;});
@@ -2196,6 +2279,9 @@ function doChOrg(sid,ctId){
 }
 
 function spSupsContent(){
+  // Load from Supabase in background
+  sb.from('academic_supervisors').select('*').then(function(r){if(r.data)r.data.forEach(function(a){if(!ACAD_SUP[a.id])ACAD_SUP[a.id]={name:a.name||'',pass:a.pass,email:a.email||'',students:[]};else{ACAD_SUP[a.id].name=a.name||ACAD_SUP[a.id].name;}});});
+  sb.from('field_supervisors').select('*').then(function(r){if(r.data)r.data.forEach(function(f){if(!FIELD_SUP[f.id])FIELD_SUP[f.id]={name:f.name||'',pass:f.pass,email:f.email||'',students:[]};else{FIELD_SUP[f.id].name=f.name||FIELD_SUP[f.id].name;}});});
   var acs=Object.entries(ACAD_SUP);var fls=Object.entries(FIELD_SUP);
   return'<div class="ph"><div class="ph-r"><div class="pt">ادارة المشرفين</div>'+
   '<div style="display:flex;gap:8px"><button class="btn btn-p" onclick="addSupModal(\'academic\')">مشرف اكاديمي جديد</button><button class="btn btn-o" onclick="addSupModal(\'field\')">مشرف ميداني جديد</button></div></div></div>'+
@@ -2235,8 +2321,13 @@ function saveSup(type){
   var e=document.getElementById('sv-e').value.trim();
   if(!n||!id||!p){return alert('يرجى ملء جميع الحقول');}
   if(type==='academic'&&ACAD_SUP[id]||type==='field'&&FIELD_SUP[id]){return alert('المعرف مستخدم');}
-  if(type==='academic')ACAD_SUP[id]={name:n,pass:p,email:e,students:[]};
-  else FIELD_SUP[id]={name:n,pass:p,email:e,students:[]};
+  if(type==='academic'){
+    ACAD_SUP[id]={name:n,pass:p,email:e,students:[]};
+    sb.from('academic_supervisors').upsert({id:id,name:n,pass:p,email:e}).then(function(){});
+  } else {
+    FIELD_SUP[id]={name:n,pass:p,email:e,students:[]};
+    sb.from('field_supervisors').upsert({id:id,name:n,pass:p,email:e}).then(function(){});
+  }
   var role=type==='academic'?'مشرف اكاديمي':'مشرف ميداني';
   modal('تم انشاء الحساب',
     '<div class="notif ns" style="margin-bottom:12px">تم انشاء حساب <b>'+n+'</b></div>'+
@@ -2253,12 +2344,18 @@ function saveSup(type){
     [['اغلاق','closeM();spT(\'sups\')','btn-p']]);
 }
 function copyC(id,pass,name,role,email){
-  var txt='السلام عليكم\nاستاذ/ة '+name+'\n\nتم انشاء حسابك في بوابة التدريب الميداني — جامعة الجوف\n\nبيانات الدخول:\n• الرابط: https://osamashahin.github.io/jouf-training\n• الدور: '+role+'\n• المعرف: '+id+'\n• كلمة المرور: '+pass+(email?'\n• البريد: '+email:'')+'\n\nوحدة التدريب والخريجين';
+  var txt='السلام عليكم\nاستاذ/ة '+name+'\n\nتم انشاء حسابك في بوابة التدريب التطبيقي — جامعة الجوف\n\nبيانات الدخول:\n• الرابط: https://osamashahin.github.io/jouf-training\n• الدور: '+role+'\n• المعرف: '+id+'\n• كلمة المرور: '+pass+(email?'\n• البريد: '+email:'')+'\n\nوحدة التدريب والخريجين';
   navigator.clipboard.writeText(txt).then(function(){alert('تم النسخ');}).catch(function(){alert(txt);});
 }
 function delSup(type,id){
   if(!confirm('حذف هذا المشرف؟'))return;
-  if(type==='academic')delete ACAD_SUP[id];else delete FIELD_SUP[id];
+  if(type==='academic'){
+    delete ACAD_SUP[id];
+    sb.from('academic_supervisors').delete().eq('id',id).then(function(){});
+  } else {
+    delete FIELD_SUP[id];
+    sb.from('field_supervisors').delete().eq('id',id).then(function(){});
+  }
   // Refresh
   var c=document.getElementById('sp-ct')||document.getElementById('adm-ct');
   if(c)c.innerHTML=spSupsContent();
@@ -2296,7 +2393,8 @@ function srchAssign(v){
 }
 function doAssign(sid){
   var aid=document.getElementById('asgn-a').value;var ac=ACAD_SUP[aid];
-  if(ac&&ac.students.indexOf(sid)===-1)ac.students.push(sid);
+  if(ac&&ac.students.indexOf(sid)===-1){ac.students.push(sid);}
+  sb.from('assignments').upsert({student_id:sid,academic_id:aid}).then(function(){});
   document.getElementById('asgn-s').value='';document.getElementById('asgn-res').innerHTML='';
   // Refresh
   var c=document.getElementById('sp-ct')||document.getElementById('adm-ct');
@@ -2304,6 +2402,7 @@ function doAssign(sid){
 }
 function unassign(aid,sid){
   var ac=ACAD_SUP[aid];if(ac)ac.students=ac.students.filter(function(s){return s!==sid;});
+  sb.from('assignments').delete().eq('student_id',sid).eq('academic_id',aid).then(function(){});
   var c=document.getElementById('sp-ct')||document.getElementById('adm-ct');
   if(c)c.innerHTML=spAssignContent();
 }
@@ -2358,12 +2457,8 @@ function spResetContent(){
   '<button class="btn btn-r" style="padding:10px 24px;font-size:14px" onclick="doReset()">اعادة التعيين</button></div></div>';
 }
 function doReset(){
-  if(!confirm('هل انت متاكد؟'))return;
-  ORGS.forEach(function(o){o.used=0;});
-  Object.keys(REQS).forEach(function(k){delete REQS[k];});
-  Object.keys(FORMS).forEach(function(k){delete FORMS[k];});
-  Object.keys(TIMERS).forEach(function(k){delete TIMERS[k];});
-  alert('تم اعادة التعيين');spT('dash');
+  if(!confirm('هل انت متاكد؟ لا يمكن التراجع'))return;
+  dbResetAll().then(function(){alert('تم اعادة التعيين الكامل');spT('dash');});
 }
 
 // ===== CEO SCREEN =====
@@ -2520,6 +2615,302 @@ function sendOrgEmail(studentId,orgId){
   }).catch(function(e){
     console.log('Email error:',e);
   });
+}
+
+// ===== SUPABASE =====
+const SURL = 'https://iezfkcnvjblndfqppxjm.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllemZrY252amJsbmRmcXBweGptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NjI0NTMsImV4cCI6MjA5MzQzODQ1M30.IlZiM_og0PYlwtn5cbDcXI1NkhLspP255rKTJk5Q-zk';
+const sb = supabase.createClient(SURL, SKEY);
+
+// ===== DB FUNCTIONS =====
+async function dbGetRequest(studentId){
+  const {data} = await sb.from('requests').select('*,organizations(*)').eq('student_id',studentId).single();
+  return data;
+}
+async function dbSaveRequest(studentId, orgId){
+  const {data,error} = await sb.from('requests').insert({student_id:studentId,org_id:orgId,status:'pending'}).select().single();
+  return {data,error};
+}
+async function dbUpdateRequest(studentId, status){
+  await sb.from('requests').update({status}).eq('student_id',studentId);
+  if(status==='approved'){
+    const r = await sb.from('requests').select('org_id').eq('student_id',studentId).single();
+    if(r.data) await sb.from('organizations').update({used: sb.rpc('increment',{row_id:r.data.org_id})}).eq('id',r.data.org_id);
+  }
+}
+async function dbGetAssignments(studentId){
+  const {data} = await sb.from('assignments').select('*').eq('student_id',studentId).single();
+  return data;
+}
+async function dbSaveAssignment(studentId, academicId, fieldId){
+  await sb.from('assignments').upsert({student_id:studentId,academic_id:academicId,field_id:fieldId});
+}
+async function dbGetForms(studentId){
+  const {data} = await sb.from('form_uploads').select('*').eq('student_id',studentId);
+  return data||[];
+}
+async function dbSaveForm(studentId, formId, uploadedBy, role, fileName){
+  await sb.from('form_uploads').upsert({
+    student_id:studentId, form_id:formId,
+    uploaded_by:uploadedBy, uploader_role:role,
+    file_name:fileName, uploaded_at:new Date().toISOString()
+  });
+}
+async function dbGetTimer(studentId){
+  const {data} = await sb.from('training_timers').select('*').eq('student_id',studentId).single();
+  return data;
+}
+async function dbStartTimer(studentId, approvedBy){
+  await sb.from('training_timers').upsert({
+    student_id:studentId, start_date:new Date().toISOString(), approved_by:approvedBy
+  });
+}
+async function dbGetAcadSupervisor(userId){
+  const {data} = await sb.from('academic_supervisors').select('*').eq('id',userId).single();
+  return data;
+}
+async function dbGetFieldSupervisor(userId){
+  const {data} = await sb.from('field_supervisors').select('*').eq('id',userId).single();
+  return data;
+}
+async function dbUpdateAcadSupervisor(userId, updates){
+  await sb.from('academic_supervisors').update(updates).eq('id',userId);
+}
+async function dbUpdateFieldSupervisor(userId, updates){
+  await sb.from('field_supervisors').update(updates).eq('id',userId);
+}
+async function dbGetStudentsForAcad(academicId){
+  const {data} = await sb.from('assignments').select('student_id').eq('academic_id',academicId);
+  return (data||[]).map(d=>d.student_id);
+}
+async function dbGetStudentsForField(fieldId){
+  const {data} = await sb.from('assignments').select('student_id').eq('field_id',fieldId);
+  return (data||[]).map(d=>d.student_id);
+}
+async function dbGetAllRequests(){
+  const {data} = await sb.from('requests').select('*,students(*),organizations(*)').order('created_at',{ascending:false});
+  return data||[];
+}
+async function dbGetOrgs(){
+  const {data} = await sb.from('organizations').select('*').order('id');
+  return data||[];
+}
+async function dbSaveOrg(org){
+  if(org.id && typeof org.id === 'number' && org.id < 1000){
+    await sb.from('organizations').update({name:org.name,seats:org.seats,email:org.email||''}).eq('id',org.id);
+  } else {
+    const {data} = await sb.from('organizations').insert({name:org.name,seats:org.seats||20,used:0,email:org.email||''}).select().single();
+    return data;
+  }
+}
+async function dbDeleteOrg(orgId){
+  await sb.from('organizations').delete().eq('id',orgId);
+}
+async function dbUploadFile(studentId, formId, file){
+  const path = `student_${studentId}/form_${formId}_${Date.now()}_${file.name}`;
+  const {data,error} = await sb.storage.from('training-files').upload(path,file,{upsert:true});
+  if(error) return null;
+  const url = sb.storage.from('training-files').getPublicUrl(path).data.publicUrl;
+  return url;
+}
+
+// ===== SUPABASE COMPLETE LAYER =====
+// All state is now Supabase-backed
+
+async function sbInit() {
+  // Load organizations
+  try {
+    const {data} = await sb.from('organizations').select('*').order('id');
+    if (data) { ORGS = data; }
+  } catch(e) { console.log('Init error:', e); }
+}
+
+function showSpinner(msg) {
+  let sp = document.getElementById('db-spinner');
+  if (!sp) {
+    sp = document.createElement('div');
+    sp.id = 'db-spinner';
+    sp.style.cssText = 'position:fixed;inset:0;background:rgba(74,40,120,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9998;color:#fff;font-family:Cairo,sans-serif';
+    sp.innerHTML = '<div class="spin"></div><div style="font-size:14px;margin-top:10px">' + (msg||'جاري الحفظ...') + '</div>';
+    document.body.appendChild(sp);
+  } else {
+    sp.querySelector('div:last-child').textContent = msg||'جاري الحفظ...';
+    sp.style.display = 'flex';
+  }
+}
+function hideSpinner() {
+  const sp = document.getElementById('db-spinner');
+  if (sp) sp.style.display = 'none';
+}
+
+// ===== STUDENT LOGIN WITH FULL DB LOAD =====
+async function loadStudentData(uid) {
+  showSpinner('جاري تحميل بياناتك...');
+  try {
+    const [reqRes, formsRes, timerRes, assignRes, passRes] = await Promise.all([
+      sb.from('requests').select('*,organizations(*)').eq('student_id', uid).maybeSingle(),
+      sb.from('form_uploads').select('*').eq('student_id', uid),
+      sb.from('training_timers').select('*').eq('student_id', uid).maybeSingle(),
+      sb.from('assignments').select('*').eq('student_id', uid).maybeSingle(),
+      sb.from('student_passwords').select('pass').eq('student_id', uid).maybeSingle()
+    ]);
+    if (reqRes.data) {
+      REQS[uid] = {orgId: reqRes.data.org_id, status: reqRes.data.status, date: reqRes.data.created_at, organizations: reqRes.data.organizations};
+    }
+    if (formsRes.data && formsRes.data.length) {
+      FORMS[uid] = {};
+      formsRes.data.forEach(f => { FORMS[uid][f.form_id] = {up:true, date:f.uploaded_at, file:f.file_name, by:f.uploader_role, url:f.file_url}; });
+    }
+    if (timerRes.data) { TIMERS[uid] = {start: timerRes.data.start_date, approvedBy: timerRes.data.approved_by}; }
+    if (passRes.data) { STU_PASS[uid] = passRes.data.pass; }
+    if (assignRes.data) {
+      // Store assignment info
+      window._stuAssignment = assignRes.data;
+    }
+  } catch(e) { console.log('Load error:', e); }
+  hideSpinner();
+}
+
+// ===== SUPERVISOR LOGIN WITH FULL DB LOAD =====
+async function loadAcadData(uid) {
+  showSpinner('جاري تحميل البيانات...');
+  try {
+    const {data: assignments} = await sb.from('assignments').select('student_id').eq('academic_id', uid);
+    if (!ACAD_SUP[uid]) ACAD_SUP[uid] = {name:'', pass:'', email:'', students:[]};
+    ACAD_SUP[uid].students = (assignments||[]).map(a => a.student_id);
+    // Load forms for all students
+    const sids = ACAD_SUP[uid].students;
+    if (sids.length) {
+      const {data: forms} = await sb.from('form_uploads').select('*').in('student_id', sids);
+      if (forms) {
+        forms.forEach(f => {
+          if (!FORMS[f.student_id]) FORMS[f.student_id] = {};
+          FORMS[f.student_id][f.form_id] = {up:true, date:f.uploaded_at, file:f.file_name, by:f.uploader_role};
+        });
+      }
+      const {data: timers} = await sb.from('training_timers').select('*').in('student_id', sids);
+      if (timers) timers.forEach(t => { TIMERS[t.student_id] = {start: t.start_date, approvedBy: t.approved_by}; });
+      const {data: reqs} = await sb.from('requests').select('*,organizations(*)').in('student_id', sids);
+      if (reqs) reqs.forEach(r => { REQS[r.student_id] = {orgId: r.org_id, status: r.status, organizations: r.organizations}; });
+    }
+  } catch(e) { console.log('Load acad error:', e); }
+  hideSpinner();
+}
+
+async function loadFieldData(uid) {
+  showSpinner('جاري تحميل البيانات...');
+  try {
+    const {data: assignments} = await sb.from('assignments').select('student_id').eq('field_id', uid);
+    if (!FIELD_SUP[uid]) FIELD_SUP[uid] = {name:'', pass:'', email:'', students:[]};
+    FIELD_SUP[uid].students = (assignments||[]).map(a => a.student_id);
+    const sids = FIELD_SUP[uid].students;
+    if (sids.length) {
+      const {data: timers} = await sb.from('training_timers').select('*').in('student_id', sids);
+      if (timers) timers.forEach(t => { TIMERS[t.student_id] = {start: t.start_date, approvedBy: t.approved_by}; });
+      const {data: forms} = await sb.from('form_uploads').select('*').in('student_id', sids);
+      if (forms) forms.forEach(f => {
+        if (!FORMS[f.student_id]) FORMS[f.student_id] = {};
+        FORMS[f.student_id][f.form_id] = {up:true, date:f.uploaded_at, file:f.file_name, by:f.uploader_role};
+      });
+    }
+  } catch(e) { console.log('Load field error:', e); }
+  hideSpinner();
+}
+
+async function loadSupData() {
+  showSpinner('جاري تحميل البيانات...');
+  try {
+    const [orgsRes, reqsRes, acadRes, fieldRes] = await Promise.all([
+      sb.from('organizations').select('*').order('id'),
+      sb.from('requests').select('*,students(*),organizations(*)').order('created_at', {ascending:false}),
+      sb.from('academic_supervisors').select('*'),
+      sb.from('field_supervisors').select('*')
+    ]);
+    if (orgsRes.data) ORGS = orgsRes.data;
+    if (reqsRes.data) {
+      reqsRes.data.forEach(r => {
+        REQS[r.student_id] = {orgId: r.org_id, status: r.status, date: r.created_at, organizations: r.organizations, students: r.students};
+      });
+    }
+    if (acadRes.data) {
+      acadRes.data.forEach(a => {
+        if (!ACAD_SUP[a.id]) ACAD_SUP[a.id] = {name: a.name||'', pass: a.pass, email: a.email||'', students:[]};
+        else { ACAD_SUP[a.id].name = a.name||''; ACAD_SUP[a.id].email = a.email||''; }
+      });
+    }
+    if (fieldRes.data) {
+      fieldRes.data.forEach(f => {
+        if (!FIELD_SUP[f.id]) FIELD_SUP[f.id] = {name: f.name||'', pass: f.pass, email: f.email||'', students:[]};
+        else { FIELD_SUP[f.id].name = f.name||''; FIELD_SUP[f.id].email = f.email||''; }
+      });
+    }
+    // Load assignments
+    const {data: asgns} = await sb.from('assignments').select('*');
+    if (asgns) {
+      asgns.forEach(a => {
+        if (a.academic_id && ACAD_SUP[a.academic_id] && ACAD_SUP[a.academic_id].students.indexOf(a.student_id)===-1)
+          ACAD_SUP[a.academic_id].students.push(a.student_id);
+        if (a.field_id && FIELD_SUP[a.field_id] && FIELD_SUP[a.field_id].students.indexOf(a.student_id)===-1)
+          FIELD_SUP[a.field_id].students.push(a.student_id);
+      });
+    }
+  } catch(e) { console.log('Load sup error:', e); }
+  hideSpinner();
+}
+
+// ===== DB SAVE FUNCTIONS =====
+async function dbSaveStudentPass(uid, pass) {
+  await sb.from('student_passwords').upsert({student_id:uid, pass:pass, updated_at:new Date().toISOString()});
+}
+
+async function dbCancelRequest(uid) {
+  await sb.from('requests').delete().eq('student_id', uid);
+}
+
+async function dbResetAll() {
+  showSpinner('جاري اعادة التعيين...');
+  await Promise.all([
+    sb.from('requests').delete().neq('student_id',''),
+    sb.from('form_uploads').delete().neq('student_id',''),
+    sb.from('training_timers').delete().neq('student_id',''),
+    sb.from('assignments').delete().neq('student_id',''),
+    sb.from('organizations').update({used:0}).neq('id',0)
+  ]);
+  Object.keys(REQS).forEach(k=>delete REQS[k]);
+  Object.keys(FORMS).forEach(k=>delete FORMS[k]);
+  Object.keys(TIMERS).forEach(k=>delete TIMERS[k]);
+  Object.values(ACAD_SUP).forEach(a=>a.students=[]);
+  Object.values(FIELD_SUP).forEach(f=>f.students=[]);
+  ORGS.forEach(o=>o.used=0);
+  hideSpinner();
+}
+
+async function dbSaveOrgFull(org) {
+  if (org.id && org.id < 100000) {
+    await sb.from('organizations').update({name:org.name, seats:org.seats, email:org.email||'', used:org.used}).eq('id',org.id);
+  } else {
+    const {data} = await sb.from('organizations').insert({name:org.name, seats:org.seats||20, used:0, email:org.email||''}).select().single();
+    if (data) { org.id = data.id; ORGS.push(data); }
+  }
+}
+
+async function dbDeleteOrgFull(orgId) {
+  await sb.from('organizations').delete().eq('id', orgId);
+  ORGS = ORGS.filter(o=>o.id!==orgId);
+}
+
+async function dbSaveAssignFull(sid, acadId, fieldId) {
+  await sb.from('assignments').upsert({student_id:sid, academic_id:acadId||null, field_id:fieldId||null});
+}
+
+async function dbUploadFileFull(studentId, formId, file) {
+  showSpinner('جاري رفع الملف...');
+  const path = 'student_' + studentId + '/form_' + formId + '_' + Date.now() + '_' + file.name;
+  const {data, error} = await sb.storage.from('training-files').upload(path, file, {upsert:true});
+  if (error) { hideSpinner(); return null; }
+  const url = sb.storage.from('training-files').getPublicUrl(path).data.publicUrl;
+  hideSpinner();
+  return url;
 }
 </script>
 
