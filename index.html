@@ -2483,13 +2483,17 @@ function doAssignField(el){
   if(!fid){alert('اختر المشرف اولاً');return;}
   showSpinner('جاري التعيين...');
   sb.from('assignments').select('*').eq('student_id',sid).maybeSingle().then(function(r){
-    var acadId=r.data?r.data.academic_id:null;
-    sb.from('assignments').upsert({student_id:sid,field_id:fid,academic_id:acadId}).then(function(res){
+    var promise;
+    if(r.data){
+      promise=sb.from('assignments').update({field_id:fid}).eq('student_id',sid);
+    } else {
+      promise=sb.from('assignments').insert({student_id:sid,field_id:fid,academic_id:null});
+    }
+    promise.then(function(res){
       if(res.error){hideSpinner();alert('خطأ: '+res.error.message);return;}
       if(!FIELD_SUP[fid])FIELD_SUP[fid]={name:fid,pass:'',email:'',students:[]};
       if(FIELD_SUP[fid].students.indexOf(sid)===-1)FIELD_SUP[fid].students.push(sid);
-      hideSpinner();
-      spT('assign');
+      hideSpinner();spT('assign');
     });
   });
 }
@@ -2522,13 +2526,17 @@ function doAssign(el){
   if(!aid){alert('اختر المشرف اولاً');return;}
   showSpinner('جاري التعيين...');
   sb.from('assignments').select('*').eq('student_id',sid).maybeSingle().then(function(r){
-    var fieldId=r.data?r.data.field_id:null;
-    sb.from('assignments').upsert({student_id:sid,academic_id:aid,field_id:fieldId}).then(function(res){
+    var promise;
+    if(r.data){
+      promise=sb.from('assignments').update({academic_id:aid}).eq('student_id',sid);
+    } else {
+      promise=sb.from('assignments').insert({student_id:sid,academic_id:aid,field_id:null});
+    }
+    promise.then(function(res){
       if(res.error){hideSpinner();alert('خطأ: '+res.error.message);return;}
       if(!ACAD_SUP[aid])ACAD_SUP[aid]={name:aid,pass:'',email:'',students:[]};
       if(ACAD_SUP[aid].students.indexOf(sid)===-1)ACAD_SUP[aid].students.push(sid);
-      hideSpinner();
-      spT('assign');
+      hideSpinner();spT('assign');
     });
   });
 }
