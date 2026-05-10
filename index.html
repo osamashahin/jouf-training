@@ -2410,23 +2410,88 @@ function delSup(type,id){
 }
 
 function spAssignContent(){
-  var acs=Object.entries(ACAD_SUP);
-  return'<div class="ph"><div class="pt">تعيين الطلاب للمشرفين</div></div>'+
-  '<div class="card"><div class="ch"><div class="ct2">تعيين طالب لمشرف اكاديمي</div></div>'+
+  var acs=Object.entries(ACAD_SUP).filter(function(e){return e[0];});
+  var fls=Object.entries(FIELD_SUP).filter(function(e){return e[0];});
+  return '<div class="ph"><div class="pt">تعيين الطلاب للمشرفين</div></div>'+
+
+  // Academic assignment
+  '<div class="card" style="margin-bottom:14px"><div class="ch"><div class="ct2">تعيين طالب لمشرف اكاديمي</div></div>'+
   '<div class="fgr">'+
-  '<div class="fg2"><div class="flb">المشرف الاكاديمي</div><select class="fsel" id="asgn-a">'+acs.map(function(e){return'<option value="'+e[0]+'">'+(e[1].name||e[0])+' ('+e[1].students.length+' طالب)</option>';}).join('')+'</select></div>'+
+  '<div class="fg2"><div class="flb">المشرف الاكاديمي</div><select class="fsel" id="asgn-a">'+
+  acs.map(function(e){return'<option value="'+e[0]+'">'+(e[1].name||e[0])+' ('+e[1].students.length+' طالب)</option>';}).join('')+
+  '</select></div>'+
   '<div class="fg2"><div class="flb">ابحث عن الطالب</div><input class="fi" id="asgn-s" placeholder="الاسم او الرقم" oninput="srchAssign(this.value)" /></div>'+
   '<div class="fg2 full"><div id="asgn-res"></div></div></div></div>'+
-  '<div class="card" style="margin-top:14px"><div class="ch"><div class="ct2">توزيع الطلاب الحالي</div></div>'+
+
+  // Field assignment
+  '<div class="card" style="margin-bottom:14px"><div class="ch"><div class="ct2">تعيين طالب لمشرف ميداني</div></div>'+
+  '<div class="fgr">'+
+  '<div class="fg2"><div class="flb">المشرف الميداني</div><select class="fsel" id="asgn-f">'+
+  fls.map(function(e){return'<option value="'+e[0]+'">'+(e[1].name||e[0])+' ('+e[1].students.length+' طالب)</option>';}).join('')+
+  '</select></div>'+
+  '<div class="fg2"><div class="flb">ابحث عن الطالب</div><input class="fi" id="asgn-fs" placeholder="الاسم او الرقم" oninput="srchAssignField(this.value)" /></div>'+
+  '<div class="fg2 full"><div id="asgn-fres"></div></div></div></div>'+
+
+  // Current assignments
+  '<div class="card"><div class="ch"><div class="ct2">توزيع الطلاب الحالي — اكاديمي</div></div>'+
   acs.map(function(e){
     return'<div style="padding:12px 16px;border-bottom:.5px solid #F0EBF8">'+
-    '<div style="font-weight:600;color:#4A2878;margin-bottom:6px">'+e[1].name+' ('+e[1].students.length+' طالب)</div>'+
+    '<div style="font-weight:600;color:#4A2878;margin-bottom:6px">'+(e[1].name||e[0])+' ('+e[1].students.length+' طالب)</div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:4px">'+
-    e[1].students.map(function(sid){var s=gS(sid);return s?'<span class="b bp" style="cursor:pointer" onclick="unassign(\''+e[0]+'\',\''+sid+'\')">× '+s.name.split(' ')[0]+' ('+s.remaining+'س)</span>':'';}).join('')+
+    e[1].students.map(function(sid){var s=gS(sid);return s?'<span class="b bp" style="cursor:pointer" onclick="unassign(''+e[0]+'',''+sid+'')">× '+s.name.split(' ')[0]+'</span>':'';}).join('')+
+    '</div></div>';
+  }).join('')+'</div>'+
+
+  '<div class="card" style="margin-top:14px"><div class="ch"><div class="ct2">توزيع الطلاب الحالي — ميداني</div></div>'+
+  fls.map(function(e){
+    return'<div style="padding:12px 16px;border-bottom:.5px solid #F0EBF8">'+
+    '<div style="font-weight:600;color:#4A2878;margin-bottom:6px">'+(e[1].name||e[0])+' ('+e[1].students.length+' طالب)</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:4px">'+
+    e[1].students.map(function(sid){var s=gS(sid);return s?'<span class="b bp" style="cursor:pointer" onclick="unassignField(''+e[0]+'',''+sid+'')">× '+s.name.split(' ')[0]+'</span>':'';}).join('')+
     '</div></div>';
   }).join('')+'</div>';
 }
-var asgnTO;
+var asgnTO, asgnFTO;
+function srchAssignField(v){
+  clearTimeout(asgnFTO);
+  asgnFTO=setTimeout(function(){
+    if(!v){document.getElementById('asgn-fres').innerHTML='';return;}
+    var res=fS(v).slice(0,5);
+    document.getElementById('asgn-fres').innerHTML=res.length?
+    res.map(function(s){
+      return'<div style="padding:7px 10px;background:#F0EBF8;border-radius:7px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">'+
+      '<span style="font-size:12px;color:#4A2878">'+s.name+' — '+s.major+' — '+s.remaining+' ساعة</span>'+
+      '<button class="btn btn-p btn-sm" onclick="doAssignField(''+s.id+'')">تعيين</button></div>';
+    }).join(''):
+    '<div style="font-size:12px;color:#7B6FA0;padding:8px">لا توجد نتائج</div>';
+  },300);
+}
+
+function doAssignField(sid){
+  var fid=document.getElementById('asgn-f').value;
+  var fl=FIELD_SUP[fid];
+  if(fl&&fl.students.indexOf(sid)===-1)fl.students.push(sid);
+  // Check if assignment exists and update
+  sb.from('assignments').select('*').eq('student_id',sid).maybeSingle().then(function(r){
+    if(r.data){
+      sb.from('assignments').update({field_id:fid}).eq('student_id',sid);
+    } else {
+      sb.from('assignments').insert({student_id:sid,field_id:fid});
+    }
+  });
+  document.getElementById('asgn-fs').value='';
+  document.getElementById('asgn-fres').innerHTML='';
+  var c=document.getElementById('sp-ct')||document.getElementById('adm-ct');
+  if(c)c.innerHTML=spAssignContent();
+}
+
+function unassignField(fid,sid){
+  var fl=FIELD_SUP[fid];if(fl)fl.students=fl.students.filter(function(s){return s!==sid;});
+  sb.from('assignments').update({field_id:null}).eq('student_id',sid).eq('field_id',fid);
+  var c=document.getElementById('sp-ct')||document.getElementById('adm-ct');
+  if(c)c.innerHTML=spAssignContent();
+}
+
 function srchAssign(v){
   clearTimeout(asgnTO);
   asgnTO=setTimeout(function(){
@@ -2442,7 +2507,11 @@ function srchAssign(v){
 function doAssign(sid){
   var aid=document.getElementById('asgn-a').value;var ac=ACAD_SUP[aid];
   if(ac&&ac.students.indexOf(sid)===-1)ac.students.push(sid);
-  sb.from('assignments').upsert({student_id:sid,academic_id:aid});
+  // Upsert preserving field_id
+  sb.from('assignments').select('field_id').eq('student_id',sid).maybeSingle().then(function(r){
+    var fieldId=r.data?r.data.field_id:null;
+    sb.from('assignments').upsert({student_id:sid,academic_id:aid,field_id:fieldId});
+  });
   document.getElementById('asgn-s').value='';document.getElementById('asgn-res').innerHTML='';
   // Refresh
   var c=document.getElementById('sp-ct')||document.getElementById('adm-ct');
@@ -2485,19 +2554,28 @@ function spT(tab){
   else if(tab==='sups')c.innerHTML=spSupsContent();
   else if(tab==='assign'){
     showSpinner('جاري تحميل المشرفين...');
-    sb.from('academic_supervisors').select('*').then(function(r){
-      if(r.data)r.data.forEach(function(a){
+    Promise.all([
+      sb.from('academic_supervisors').select('*'),
+      sb.from('field_supervisors').select('*'),
+      sb.from('assignments').select('*')
+    ]).then(function(results){
+      var acR=results[0];var flR=results[1];var asR=results[2];
+      if(acR.data)acR.data.forEach(function(a){
         if(!ACAD_SUP[a.id])ACAD_SUP[a.id]={name:a.name||a.id,pass:a.pass,email:a.email||'',students:[]};
-        else{ACAD_SUP[a.id].name=a.name||a.id;}
+        else{ACAD_SUP[a.id].name=a.name||a.id;ACAD_SUP[a.id].students=[];}
       });
-      sb.from('assignments').select('*').then(function(ar){
-        if(ar.data)ar.data.forEach(function(a){
-          if(a.academic_id&&ACAD_SUP[a.academic_id]&&ACAD_SUP[a.academic_id].students.indexOf(a.student_id)===-1)
-            ACAD_SUP[a.academic_id].students.push(a.student_id);
-        });
-        hideSpinner();
-        c.innerHTML=spAssignContent();
+      if(flR.data)flR.data.forEach(function(f){
+        if(!FIELD_SUP[f.id])FIELD_SUP[f.id]={name:f.name||f.id,pass:f.pass,email:f.email||'',students:[]};
+        else{FIELD_SUP[f.id].name=f.name||f.id;FIELD_SUP[f.id].students=[];}
       });
+      if(asR.data)asR.data.forEach(function(a){
+        if(a.academic_id&&ACAD_SUP[a.academic_id]&&ACAD_SUP[a.academic_id].students.indexOf(a.student_id)===-1)
+          ACAD_SUP[a.academic_id].students.push(a.student_id);
+        if(a.field_id&&FIELD_SUP[a.field_id]&&FIELD_SUP[a.field_id].students.indexOf(a.student_id)===-1)
+          FIELD_SUP[a.field_id].students.push(a.student_id);
+      });
+      hideSpinner();
+      c.innerHTML=spAssignContent();
     });
   }
   else if(tab==='reset')c.innerHTML=spResetContent();
