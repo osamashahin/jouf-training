@@ -2501,7 +2501,7 @@ function doAssignField(el){
 function unassignField(el){
   var fid=el.getAttribute('data-fid');var sid=el.getAttribute('data-sid');
   showSpinner('جاري الحذف...');
-  sb.from('assignments').update({field_id:null}).eq('student_id',sid).then(function(){
+  sb.from('assignments').delete().eq('student_id',sid).eq('field_id',fid).then(function(){
     var fl=FIELD_SUP[fid];if(fl)fl.students=fl.students.filter(function(s){return s!==sid;});
     hideSpinner();spT('assign');
   });
@@ -2525,14 +2525,9 @@ function doAssign(el){
   var aid=document.getElementById('asgn-a').value;
   if(!aid){alert('اختر المشرف اولاً');return;}
   showSpinner('جاري التعيين...');
-  sb.from('assignments').select('*').eq('student_id',sid).maybeSingle().then(function(r){
-    var promise;
-    if(r.data){
-      promise=sb.from('assignments').update({academic_id:aid}).eq('student_id',sid);
-    } else {
-      promise=sb.from('assignments').insert({student_id:sid,academic_id:aid,field_id:null});
-    }
-    promise.then(function(res){
+  // Delete old then insert new
+  sb.from('assignments').delete().eq('student_id',sid).then(function(){
+    sb.from('assignments').insert({student_id:sid,academic_id:aid,field_id:null}).then(function(res){
       if(res.error){hideSpinner();alert('خطأ: '+res.error.message);return;}
       if(!ACAD_SUP[aid])ACAD_SUP[aid]={name:aid,pass:'',email:'',students:[]};
       if(ACAD_SUP[aid].students.indexOf(sid)===-1)ACAD_SUP[aid].students.push(sid);
@@ -2543,7 +2538,7 @@ function doAssign(el){
 function unassign(el){
   var aid=el.getAttribute('data-aid');var sid=el.getAttribute('data-sid');
   showSpinner('جاري الحذف...');
-  sb.from('assignments').update({academic_id:null}).eq('student_id',sid).then(function(){
+  sb.from('assignments').delete().eq('student_id',sid).eq('academic_id',aid).then(function(){
     var ac=ACAD_SUP[aid];if(ac)ac.students=ac.students.filter(function(s){return s!==sid;});
     hideSpinner();spT('assign');
   });
