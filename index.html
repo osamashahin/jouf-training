@@ -159,7 +159,7 @@ tr:hover td{background:#FDFCFF}
     </div>
     <div class="lr">
       <div class="lt">تسجيل الدخول</div>
-      <div class="ls">اختر نوع الحساب ثم ادخل بياناتك</div>
+      <div class="ls">اختر دورك ثم ادخل بياناتك</div>
       
       <div class="fw">
         <div class="fl">نوع الحساب</div>
@@ -218,19 +218,21 @@ function doLoginSafe(){if(typeof doLogin==='function')doLogin();}
   // Check Supabase session after scripts load
   setTimeout(function(){
     if(typeof sb==='undefined'){showLogin();return;}
-    sb.auth.getSession().then(function(result){
-      var session=result.data&&result.data.session;
-      if(!session){showLogin();return;}
-      // Restore session from metadata
-      var meta=session.user&&session.user.user_metadata;
-      var role=meta&&meta.role;
-      var username=meta&&meta.username;
-      if(!role||!username){showLogin();return;}
-      curRole=role;curUser=username;
-      if(typeof restoreFromSession==='function'){
-        restoreFromSession(role,username,session).catch(function(){showLogin();});
-      } else {showLogin();}
-    }).catch(function(){showLogin();});
+    // Restore from sessionStorage
+      var sid=sessionStorage.getItem('jouf_sid');
+      var savedRole=sessionStorage.getItem('jouf_role');
+      var savedUser=sessionStorage.getItem('jouf_user');
+      if(!sid||!savedRole||!savedUser){showLogin();return;}
+      // Verify session in Supabase DB
+      sb.from('user_sessions').select('*').eq('session_id',sid).maybeSingle().then(function(r){
+        if(!r.data||new Date(r.data.expires_at)<new Date()){
+          sessionStorage.clear();showLogin();return;
+        }
+        curRole=savedRole;curUser=savedUser;
+        if(typeof restoreFromSession==='function'){
+          restoreFromSession(savedRole,savedUser,null).catch(function(){sessionStorage.clear();showLogin();});
+        } else {showLogin();}
+      }).catch(function(){showLogin();});
   },800);
   document.addEventListener('DOMContentLoaded',function(){
     setTimeout(function(){
@@ -1591,15 +1593,7 @@ function doLogin(){
       var cp=(r.data&&r.data.pass)||st.national_id;
       if(p!==cp){err.style.display='flex';btn.disabled=false;btn.textContent='دخول إلى النظام';return;}
       curUser=u;curStu=st;
-      // Sign in via Supabase Auth for session persistence
-      sb.auth.signInWithPassword({email:u+'@student.jouf-training.sa',password:p}).then(function(authRes){
-        if(authRes.error){
-          // Auth user doesn't exist yet - create it
-          sb.auth.signUp({email:u+'@student.jouf-training.sa',password:p,options:{data:{role:'student',username:u}}}).then(function(){
-            sb.auth.signInWithPassword({email:u+'@student.jouf-training.sa',password:p}).then(function(){});
-          });
-        }
-      });
+
       sb.from('organizations').select('*').order('id').then(function(or){
         if(or.data)ORGS=or.data;
         loadStudentData(u).then(function(){
@@ -1609,37 +1603,7 @@ function doLogin(){
       });
     });
   } else if(curRole==='academic'||curRole==='field'||curRole==='supervisor'||curRole==='ceo'||curRole==='admin'){
-    // All other roles: sign in via Supabase Auth
-    var email=u+'@jouf-training.sa';
-    showSpinner('جاري التحقق...');
-    sb.auth.signInWithPassword({email:email,password:p}).then(function(r){
-      if(r.error||!r.data||!r.data.user){
-        hideSpinner();err.style.display='flex';btn.disabled=false;btn.textContent='دخول إلى النظام';return;
-      }
-      var meta=r.data.user.user_metadata;
-      var role=meta&&meta.role;
-      var username=meta&&meta.username;
-      if(!role||role!==curRole){
-        sb.auth.signOut();hideSpinner();err.style.display='flex';btn.disabled=false;btn.textContent='دخول إلى النظام';return;
-      }
-      curUser=username||u;
-      if(role==='academic'){
-        var acData=r.data.user;
-        ACAD_SUP[curUser]={name:meta.name||'',pass:p,email:meta.email||'',students:[]};
-        loadAcadData(curUser).then(function(){hideSpinner();buildAcadScreen();showScr('s-acad');btn.disabled=false;btn.textContent='دخول إلى النظام';});
-      } else if(role==='field'){
-        FIELD_SUP[curUser]={name:meta.name||'',pass:p,email:meta.email||'',students:[]};
-        loadFieldData(curUser).then(function(){hideSpinner();buildFieldScreen();showScr('s-field');btn.disabled=false;btn.textContent='دخول إلى النظام';});
-      } else {
-        loadSupData().then(function(){
-          hideSpinner();
-          if(role==='supervisor'){buildSupScreen();showScr('s-sup');}
-          else if(role==='ceo'){buildCeoScreen();showScr('s-ceo');}
-          else{buildAdminScreen();showScr('s-adm');}
-          btn.disabled=false;btn.textContent='دخول إلى النظام';
-        });
-      }
-    });
+
   } else {
     err.style.display='flex';btn.disabled=false;btn.textContent='دخول إلى النظام';
   }
@@ -1647,7 +1611,11 @@ function doLogin(){
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.getElementById('s-login').classList.contains('active'))doLogin();});
 function showScr(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');}
 function logout(){
-  sb.auth.signOut();
+  var sid=sessionStorage.getItem('jouf_sid');
+  if(sid)sb.from('user_sessions').delete().eq('session_id',sid).then(function(){});
+  sessionStorage.removeItem('jouf_sid');
+  sessionStorage.removeItem('jouf_role');
+  sessionStorage.removeItem('jouf_user');
   curUser=null;curStu=null;curRole=null;
   Object.keys(REQS).forEach(function(k){delete REQS[k];});
   Object.keys(FORMS).forEach(function(k){delete FORMS[k];});
@@ -1697,20 +1665,20 @@ function saveProfile(role,user){
   if(role==='student'){
     if(p1){STU_PASS[user]=p1;sb.from('student_passwords').upsert({student_id:user,pass:p1});
       // Update Supabase Auth password
-      sb.auth.updateUser({password:p1});
+      
     }
     hideSpinner();
   } else if(role==='academic'){
     if(!ACAD_SUP[user])ACAD_SUP[user]={name:'',pass:'',email:'',students:[]};
     var upd={name:name||ACAD_SUP[user].name,email:email||''};
     ACAD_SUP[user].name=upd.name;ACAD_SUP[user].email=upd.email;
-    if(p1){ACAD_SUP[user].pass=p1;upd.pass=p1;sb.auth.updateUser({password:p1});}
+    if(p1){ACAD_SUP[user].pass=p1;upd.pass=p1;}
     sb.from('academic_supervisors').update(upd).eq('id',user).then(function(){hideSpinner();});
   } else if(role==='field'){
     if(!FIELD_SUP[user])FIELD_SUP[user]={name:'',pass:'',email:'',students:[]};
     var upd2={name:name||FIELD_SUP[user].name,email:email||''};
     FIELD_SUP[user].name=upd2.name;FIELD_SUP[user].email=upd2.email;
-    if(p1){FIELD_SUP[user].pass=p1;upd2.pass=p1;sb.auth.updateUser({password:p1});}
+    if(p1){FIELD_SUP[user].pass=p1;upd2.pass=p1;}
     sb.from('field_supervisors').update(upd2).eq('id',user).then(function(){hideSpinner();});
   } else {SYS[user].name=name||SYS[user].name;SYS[user].email=email;if(p1)SYS[user].pass=p1;hideSpinner();}
   closeM();
@@ -2684,7 +2652,7 @@ function hideSpinner(){var sp=document.getElementById('db-sp');if(sp)sp.style.di
 
 // ===== SESSION RESTORE =====
 window._sessionRestoring=false;
-async function restoreFromSession(role,username,session){
+async function restoreFromSession(role,username,_session){
   window._sessionRestoring=true;
   showSpinner('جاري استعادة جلستك...');
   try{
@@ -2729,19 +2697,9 @@ async function restoreFromSession(role,username,session){
 }
 
 // ===== SIGN IN =====
-async function sbSignIn(username,password,role){
-  var email=username+'@jouf-training.sa';
-  // For students: use national_id@student.jouf.sa
-  if(role==='student') email=username+'@student.jouf-training.sa';
-  var r=await sb.auth.signInWithPassword({email:email,password:password});
-  return r;
-}
 
-async function sbSignInStudent(studentId,password){
-  // Students don't have auth accounts - verify locally + create custom session
-  var r=await sb.auth.signInWithPassword({email:studentId+'@student.jouf-training.sa',password:password});
-  return r;
-}
+
+
 
 // ===== LOAD DATA =====
 async function loadStudentData(uid){
