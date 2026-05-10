@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>بوابة التدريب الميداني — جامعة الجوف</title>
+<title>بوابة التدريب التطبيقي للكلية التطبيقية — جامعة الجوف</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2312,21 +2312,19 @@ function spReqsContent(ctId,myStudents){
   return h;
 }
 function spDecide(sid,status,ctId){
-  if(!REQS[sid])return;REQS[sid].status=status;
-  if(status==='approved'){
-    var o=getOrg(REQS[sid].orgId);
-    if(o&&o.used<o.seats)o.used++;
-    sendOrgEmail(sid,REQS[sid].orgId);
-    // Remind to assign supervisors
-    var s=gS(sid);
-    var hasAcad=Object.values(ACAD_SUP).some(function(ac){return ac.students.indexOf(sid)>-1;});
-    if(!hasAcad){
-      setTimeout(function(){
-        alert('تم قبول طلب الطالب '+(s?s.name.split(' ')[0]:sid)+'\nالخطوة التالية: تعيين مشرف أكاديمي وميداني من تبويب (تعيين الطلاب)');
-      },500);
+  if(!REQS[sid])return;
+  showSpinner('جاري الحفظ...');
+  sb.from('requests').update({status:status}).eq('student_id',sid).then(function(r){
+    if(r.error){hideSpinner();return;}
+    REQS[sid].status=status;
+    if(status==='approved'){
+      var o=ORGS.find(function(x){return x.id===REQS[sid].orgId;});
+      if(o&&o.used<o.seats){o.used++;sb.from('organizations').update({used:o.used}).eq('id',o.id);}
+      sendOrgEmail(sid,REQS[sid].orgId);
     }
-  }
-  var c=document.getElementById(ctId);if(c)c.innerHTML=spReqsContent(ctId,null);
+    hideSpinner();
+    var c=document.getElementById(ctId);if(c)c.innerHTML=spReqsContent(ctId,null);
+  });
 }
 function chOrg(sid,ctId){
   var avail=ORGS.filter(function(o){return o.seats-o.used>0;});
