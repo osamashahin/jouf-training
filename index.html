@@ -1548,7 +1548,12 @@ function getOrg(id){return ORGS.find(function(o){return o.id===id;});}
 function getMonths(major){return major==='التعقيم'?6:3;}
 function statusAr(s){return s==='approved'?'مقبول':s==='pending'?'معلق':'مرفوض';}
 function ibox(k,v){return '<div style="background:#F0EBF8;border-radius:9px;padding:10px;border:1px solid #D4C5E8"><div style="font-size:10px;color:#7B6FA0;font-weight:600;margin-bottom:2px">'+k+'</div><div style="font-size:12px;color:#4A2878;font-weight:600">'+v+'</div></div>';}
-function fStatus(sid){var fd=FORMS[sid]||{};var up=FDEFS.filter(function(f){return fd[f.id]&&fd[f.id].up;}).length;return{up:up,tot:9,pct:Math.round(up/9*100)};}
+function fStatus(sid){
+  var fd=FORMS[sid]||{};
+  var up=FDEFS.filter(function(f){return fd[f.id]&&fd[f.id].up&&fd[f.id].status!=='returned';}).length;
+  var total=FDEFS.filter(function(f){return fd[f.id]&&fd[f.id].up;}).length;
+  return{up:up,tot:9,pct:Math.round(up/9*100),total:total};
+}
 function fBadge(pct){if(pct===100)return'<span class="b bg">مكتمل</span>';if(pct>=50)return'<span class="b bw">جارٍ ('+pct+'%)</span>';if(pct>0)return'<span class="b bp">بدأ ('+pct+'%)</span>';return'<span class="b bx">لم يبدأ</span>';}
 function timerH(sid,major){
   var td=TIMERS[sid];
@@ -2019,18 +2024,62 @@ function acStudents(){
   return'<div class="ph"><div class="pt">طلابي</div><div class="ps">'+stus.length+' طالب/ة</div></div>'+
   stus.map(function(s){
     var fs=fStatus(s.id);var fd=FORMS[s.id]||{};
-    return'<div class="card" style="margin-bottom:12px"><div style="padding:14px">'+
-    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+
+    var formRows=FDEFS.map(function(f){
+      var fu=fd[f.id];
+      var status=fu?fu.status||'pending':null;
+      var statusBadge=!fu?'<span class="b bx">لم يُرفع</span>':
+        status==='approved'?'<span class="b bg">مقبول</span>':
+        status==='returned'?'<span class="b br2">مُرجع</span>':
+        '<span class="b bw">بانتظار المراجعة</span>';
+      var actionBtns=fu&&status!=='approved'?
+        '<button class="btn btn-g btn-sm" data-sid="'+s.id+'" data-fid="'+f.id+'" onclick="acApproveForm(this)">قبول</button> '+
+        '<button class="btn btn-r btn-sm" data-sid="'+s.id+'" data-fid="'+f.id+'" onclick="acReturnForm(this)">إرجاع</button>':'';
+      return'<tr>'+
+        '<td style="font-size:11px">'+f.icon+' نموذج '+f.id+': '+f.title.substring(0,25)+'...</td>'+
+        '<td style="font-size:10px">'+(fu?fu.by||'—':'—')+'</td>'+
+        '<td>'+statusBadge+'</td>'+
+        '<td>'+actionBtns+'</td></tr>';
+    }).join('');
+    return'<div class="card" style="margin-bottom:14px"><div style="padding:14px">'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
     '<div style="width:40px;height:40px;border-radius:10px;background:#6B3FA0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:18px">'+s.name[0]+'</div>'+
-    '<div style="flex:1"><div style="font-weight:700;color:#4A2878">'+s.name+'</div><div style="font-size:11px;color:#7B6FA0">'+s.id+' | '+s.major+' | الساعات المتبقية: <b style="color:#B45309">'+s.remaining+'</b></div></div>'+
-    '<div style="display:flex;gap:6px">'+fBadge(fs.pct)+'<button class="btn btn-p btn-sm" onclick="acUpForm(\''+s.id+'\')">رفع نموذج</button></div></div>'+
+    '<div style="flex:1"><div style="font-weight:700;color:#4A2878">'+s.name+'</div>'+
+    '<div style="font-size:11px;color:#7B6FA0">'+s.id+' | '+s.major+' | الساعات المتبقية: <b style="color:#B45309">'+s.remaining+'</b></div></div>'+
+    '<div style="display:flex;gap:6px">'+fBadge(fs.pct)+
+    '<button class="btn btn-p btn-sm" data-sid="'+s.id+'" onclick="acUpForm(this.getAttribute(\"data-sid\"))">رفع نموذج</button></div></div>'+
     timerH(s.id,s.major)+
-    '<div style="margin-top:10px"><div style="font-size:11px;font-weight:600;color:#4A2878;margin-bottom:6px">حالة النماذج:</div>'+
-    '<div style="display:flex;flex-wrap:wrap;gap:4px">'+
-    FDEFS.map(function(f){var done=fd[f.id]&&fd[f.id].up;var byMe=fd[f.id]&&fd[f.id].by;return'<span title="نموذج '+f.id+': '+f.title+(byMe?' (رفعه: '+byMe+')':'')+'" style="width:28px;height:28px;border-radius:6px;background:'+(done?'#15803D':'#D4C5E8')+';display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:'+(done?'#fff':'#7B6FA0')+';font-weight:700;cursor:default">'+f.id+'</span>';}).join('')+
-    '</div></div>'+
+    '<table style="margin-top:10px"><thead><tr>'+
+    '<th>النموذج</th><th>رُفع من</th><th>الحالة</th><th>إجراء</th>'+
+    '</tr></thead><tbody>'+formRows+'</tbody></table>'+
     '</div></div>';
   }).join('')||'<div class="notif ni2">لا يوجد طلاب معيّنون لك بعد</div>';
+}
+
+function acApproveForm(el){
+  var sid=el.getAttribute('data-sid');
+  var fid=parseInt(el.getAttribute('data-fid'));
+  sb.from('form_uploads').update({status:'approved'}).eq('student_id',sid).eq('form_id',fid).then(function(r){
+    if(r.error){alert('خطأ: '+r.error.message);return;}
+    if(FORMS[sid]&&FORMS[sid][fid])FORMS[sid][fid].status='approved';
+    // Start timer if form 1 approved
+    if(fid===1){
+      var ts=new Date().toISOString();
+      TIMERS[sid]={start:ts,approvedBy:curUser};
+      sb.from('training_timers').upsert({student_id:sid,start_date:ts,approved_by:curUser});
+    }
+    acT('stus');
+  });
+}
+
+function acReturnForm(el){
+  var sid=el.getAttribute('data-sid');
+  var fid=parseInt(el.getAttribute('data-fid'));
+  var reason=prompt('سبب الإرجاع (اختياري):','');
+  sb.from('form_uploads').update({status:'returned',notes:reason||''}).eq('student_id',sid).eq('form_id',fid).then(function(r){
+    if(r.error){alert('خطأ: '+r.error.message);return;}
+    if(FORMS[sid]&&FORMS[sid][fid]){FORMS[sid][fid].status='returned';FORMS[sid][fid].notes=reason;}
+    acT('stus');
+  });
 }
 
 function acForms(){
@@ -2929,7 +2978,7 @@ async function loadStudentData(uid){
       sb.from('training_timers').select('*').eq('student_id',uid).maybeSingle()
     ]);
     if(reqR.data)REQS[uid]={orgId:reqR.data.org_id,status:reqR.data.status,date:reqR.data.created_at,organizations:reqR.data.organizations};
-    if(formR.data&&formR.data.length){FORMS[uid]={};formR.data.forEach(function(f){FORMS[uid][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,by:f.uploader_role};}); }
+    if(formR.data&&formR.data.length){FORMS[uid]={};formR.data.forEach(function(f){FORMS[uid][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};}); }
     if(timerR.data)TIMERS[uid]={start:timerR.data.start_date,approvedBy:timerR.data.approved_by};
   }catch(e){console.log('loadStu:',e);}
 }
@@ -2946,7 +2995,7 @@ async function loadAcadData(uid){
         sb.from('training_timers').select('*').in('student_id',sids),
         sb.from('requests').select('*,organizations(*)').in('student_id',sids)
       ]);
-      if(fR.data)fR.data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,by:f.uploader_role};});
+      if(fR.data)fR.data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
       if(tR.data)tR.data.forEach(function(t){TIMERS[t.student_id]={start:t.start_date,approvedBy:t.approved_by};});
       if(rR.data)rR.data.forEach(function(r){REQS[r.student_id]={orgId:r.org_id,status:r.status,organizations:r.organizations};});
     }
@@ -2964,7 +3013,7 @@ async function loadFieldData(uid){
         sb.from('form_uploads').select('*').in('student_id',sids),
         sb.from('training_timers').select('*').in('student_id',sids)
       ]);
-      if(fR.data)fR.data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,by:f.uploader_role};});
+      if(fR.data)fR.data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
       if(tR.data)tR.data.forEach(function(t){TIMERS[t.student_id]={start:t.start_date,approvedBy:t.approved_by};});
     }
   }catch(e){console.log('loadField:',e);}
