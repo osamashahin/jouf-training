@@ -2088,18 +2088,27 @@ function acStudents(){
 function acApproveForm(el){
   var sid=el.getAttribute('data-sid');
   var fid=parseInt(el.getAttribute('data-fid'));
+  showSpinner('جاري القبول...');
   sb.from('form_uploads').update({status:'approved'}).eq('student_id',sid).eq('form_id',fid).then(function(r){
-    if(r.error){alert('خطأ: '+r.error.message);return;}
+    if(r.error){hideSpinner();alert('خطأ form_uploads: '+r.error.message);return;}
     if(FORMS[sid]&&FORMS[sid][fid])FORMS[sid][fid].status='approved';
-    // Start timer if form 1 approved
     if(fid===1){
       var ts=new Date().toISOString();
       TIMERS[sid]={start:ts,approvedBy:curUser};
-      sb.from('training_timers').upsert(
-        {student_id:sid,start_date:ts,approved_by:curUser},
-        {onConflict:'student_id'}
-      );
+      // Try insert first, then update on conflict
+      sb.from('training_timers').insert({student_id:sid,start_date:ts,approved_by:curUser}).then(function(tr){
+        if(tr.error){
+          // If duplicate, update instead
+          sb.from('training_timers').update({start_date:ts,approved_by:curUser}).eq('student_id',sid).then(function(tr2){
+            if(tr2.error)console.log('Timer update error:',tr2.error.message);
+            else console.log('Timer updated for',sid);
+          });
+        } else {
+          console.log('Timer inserted for',sid);
+        }
+      });
     }
+    hideSpinner();
     acT('stus');
   });
 }
