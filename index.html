@@ -2468,13 +2468,12 @@ function srchAssignField(v){
   asgnFTO=setTimeout(function(){
     if(!v){document.getElementById('asgn-fres').innerHTML='';return;}
     var res=fS(v).slice(0,5);
-    document.getElementById('asgn-fres').innerHTML=res.length?
-    res.map(function(s){
-      return'<div style="padding:7px 10px;background:#F0EBF8;border-radius:7px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">'+
+    var out=res.length?res.map(function(s){
+      return '<div style="padding:7px 10px;background:#F0EBF8;border-radius:7px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">'+
       '<span style="font-size:12px;color:#4A2878">'+s.name+' — '+s.major+' — '+s.remaining+' ساعة</span>'+
-      '<button class="btn btn-p btn-sm" onclick="doAssignField(this)" data-sid="'+s.id+'">تعيين</button></div>';
-    }).join(''):
-    '<div style="font-size:12px;color:#7B6FA0;padding:8px">لا توجد نتائج</div>';
+      '<button class="btn btn-p btn-sm" data-sid="'+s.id+'" onclick="doAssignField(this)">تعيين</button></div>';
+    }).join(''):'<div style="font-size:12px;color:#7B6FA0;padding:8px">لا توجد نتائج</div>';
+    document.getElementById('asgn-fres').innerHTML=out;
   },300);
 }
 
@@ -2510,11 +2509,12 @@ function srchAssign(v){
   asgnTO=setTimeout(function(){
     if(!v){document.getElementById('asgn-res').innerHTML='';return;}
     var res=fS(v).slice(0,5);
-    document.getElementById('asgn-res').innerHTML=res.length?
-    res.map(function(s){return'<div style="padding:7px 10px;background:#F0EBF8;border-radius:7px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">'+
-    '<span style="font-size:12px;color:#4A2878">'+s.name+' — '+s.major+' — '+s.remaining+' ساعة</span>'+
-    '<button class="btn btn-p btn-sm" onclick="doAssign(\''+s.id+'\')">تعيين</button></div>';}).join(''):
-    '<div style="font-size:12px;color:#7B6FA0;padding:8px">لا توجد نتائج</div>';
+    var out=res.length?res.map(function(s){
+      return '<div style="padding:7px 10px;background:#F0EBF8;border-radius:7px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">'+
+      '<span style="font-size:12px;color:#4A2878">'+s.name+' — '+s.major+' — '+s.remaining+' ساعة</span>'+
+      '<button class="btn btn-p btn-sm" data-sid="'+s.id+'" onclick="doAssign(this)">تعيين</button></div>';
+    }).join(''):'<div style="font-size:12px;color:#7B6FA0;padding:8px">لا توجد نتائج</div>';
+    document.getElementById('asgn-res').innerHTML=out;
   },300);
 }
 function doAssign(el){
