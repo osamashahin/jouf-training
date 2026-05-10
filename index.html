@@ -1558,7 +1558,7 @@ function fBadge(pct){if(pct===100)return'<span class="b bg">مكتمل</span>';i
 function timerH(sid,major){
   var td=TIMERS[sid];
   // If no timer set yet, start it now if form 3 was uploaded
-    if(!td)return'<div class="notif ni2">العداد يبدأ بعد اطلاع المشرف الأكاديمي وإقراره بصحة نموذج التسجيل</div>';
+    if(!td||!td.start)return'<div class="notif ni2">العداد يبدأ بعد إقرار المشرف الأكاديمي على نموذج التسجيل</div>';
   var months=getMonths(major);
   var start=new Date(td.start);var end=new Date(start);end.setMonth(end.getMonth()+months);
   var now=new Date();var pct=Math.max(0,Math.min(100,Math.round((now-start)/(end-start)*100)));
@@ -1827,7 +1827,7 @@ function stuWorkflowStatus(sid){
 
 function stuProfile(){
   var st=curStu;var req=REQS[st.id];var org=req&&((req.organizations)||(ORGS.find(function(o){return o.id===req.orgId;}))||{name:'جهة التدريب'});var fs=fStatus(st.id);
-  var showTimer=TIMERS[st.id]&&TIMERS[st.id].approvedBy==='academic';
+  var showTimer=!!(TIMERS[st.id]&&TIMERS[st.id].start);
   return'<div class="ph"><div class="ph-r"><div class="pt">ملفي الشخصي</div><button class="btn btn-o btn-sm" onclick="editProfileModal(\'student\',\''+st.id+'\')">⚙️ تعديل بياناتي</button></div></div>'+
   (showTimer?timerH(st.id,st.major):'<div class="notif ni2">العداد يبدأ تلقائياً بعد رفع نموذج التسجيل (نموذج 1)</div>')+
   '<div class="card"><div style="padding:16px">'+
