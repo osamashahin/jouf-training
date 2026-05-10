@@ -1936,25 +1936,28 @@ function stuUpForm(fid){
 function doStuUpForm(fid,inp){
   var f=inp.files[0];if(!f)return;
   var now=new Date().toISOString();
-  if(!FORMS[curUser])FORMS[curUser]={};
-  FORMS[curUser][fid]={up:true,date:now,file:f.name,by:'student'};
-  // Save to Supabase
-  sb.from('form_uploads').upsert({
-    student_id:curUser,form_id:fid,
-    uploaded_by:curUser,uploader_role:'student',
-    file_name:f.name,uploaded_at:now
-  },{onConflict:'student_id,form_id'}).then(function(r){
-    if(r.error)console.log('Upload error:',r.error.message);
-  });
-  // Start timer if form 1
-  if(fid===1){
-    var ts=now;
-    TIMERS[curUser]={start:ts,approvedBy:'student'};
-    sb.from('training_timers').upsert({student_id:curUser,start_date:ts,approved_by:curUser});
-  }
+  var path='student_'+curUser+'/form_'+fid+'_'+Date.now()+'_'+f.name;
   var st=document.getElementById('fup-st-'+fid);
-  if(st)st.innerHTML='<div class="notif ns" style="margin-top:10px">تم الرفع: '+f.name+'</div>';
-  setTimeout(function(){closeM();stuT('forms');},1200);
+  if(st)st.innerHTML='<div class="notif nw" style="margin-top:10px">جاري الرفع...</div>';
+  sb.storage.from('training-forms').upload(path,f,{upsert:true}).then(function(r){
+    if(r.error){if(st)st.innerHTML='<div class="notif ni2">خطأ: '+r.error.message+'</div>';return;}
+    var url=sb.storage.from('training-forms').getPublicUrl(path).data.publicUrl;
+    if(!FORMS[curUser])FORMS[curUser]={};
+    FORMS[curUser][fid]={up:true,date:now,file:f.name,by:'student',url:url,status:'pending'};
+    sb.from('form_uploads').upsert({
+      student_id:curUser,form_id:fid,
+      uploaded_by:curUser,uploader_role:'student',
+      file_name:f.name,file_url:url,uploaded_at:now,status:'pending'
+    },{onConflict:'student_id,form_id'}).then(function(r2){
+      if(r2.error)console.log('DB error:',r2.error.message);
+    });
+    if(fid===1){
+      TIMERS[curUser]={start:now,approvedBy:'student'};
+      sb.from('training_timers').upsert({student_id:curUser,start_date:now,approved_by:curUser});
+    }
+    if(st)st.innerHTML='<div class="notif ns" style="margin-top:10px">تم الرفع: '+f.name+'</div>';
+    setTimeout(function(){closeM();stuT('forms');},1200);
+  });
 }
 
 function stuStatus(){
@@ -2031,14 +2034,17 @@ function acStudents(){
         status==='approved'?'<span class="b bg">مقبول</span>':
         status==='returned'?'<span class="b br2">مُرجع</span>':
         '<span class="b bw">بانتظار المراجعة</span>';
+      var viewBtn=fu&&fu.url?
+        '<a href="'+fu.url+'" target="_blank" class="btn btn-o btn-sm">اطلاع</a> ':
+        (fu?'<span style="font-size:10px;color:#7B6FA0">'+fu.file+'</span> ':'');
       var actionBtns=fu&&status!=='approved'?
         '<button class="btn btn-g btn-sm" data-sid="'+s.id+'" data-fid="'+f.id+'" onclick="acApproveForm(this)">قبول</button> '+
         '<button class="btn btn-r btn-sm" data-sid="'+s.id+'" data-fid="'+f.id+'" onclick="acReturnForm(this)">إرجاع</button>':'';
       return'<tr>'+
-        '<td style="font-size:11px">'+f.icon+' نموذج '+f.id+': '+f.title.substring(0,25)+'...</td>'+
-        '<td style="font-size:10px">'+(fu?fu.by||'—':'—')+'</td>'+
+        '<td style="font-size:11px">'+f.icon+' نموذج '+f.id+'</td>'+
+        '<td style="font-size:10px;color:#7B6FA0">'+(fu?fu.by||'—':'—')+'</td>'+
         '<td>'+statusBadge+'</td>'+
-        '<td>'+actionBtns+'</td></tr>';
+        '<td style="display:flex;gap:4px;flex-wrap:wrap">'+viewBtn+actionBtns+'</td></tr>';
     }).join('');
     return'<div class="card" style="margin-bottom:14px"><div style="padding:14px">'+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
@@ -2046,9 +2052,9 @@ function acStudents(){
     '<div style="flex:1"><div style="font-weight:700;color:#4A2878">'+s.name+'</div>'+
     '<div style="font-size:11px;color:#7B6FA0">'+s.id+' | '+s.major+' | الساعات المتبقية: <b style="color:#B45309">'+s.remaining+'</b></div></div>'+
     '<div style="display:flex;gap:6px">'+fBadge(fs.pct)+
-    '<button class="btn btn-p btn-sm" data-sid="'+s.id+'" onclick="acUpForm(this.getAttribute(\"data-sid\"))">رفع نموذج</button></div></div>'+
+    '<button class="btn btn-p btn-sm" onclick="acUpForm(''+s.id+'')">رفع نموذج</button></div></div>'+
     timerH(s.id,s.major)+
-    '<table style="margin-top:10px"><thead><tr>'+
+    '<table style="margin-top:10px;width:100%"><thead><tr>'+
     '<th>النموذج</th><th>رُفع من</th><th>الحالة</th><th>إجراء</th>'+
     '</tr></thead><tbody>'+formRows+'</tbody></table>'+
     '</div></div>';
@@ -2129,6 +2135,7 @@ function acDecide(sid,status){
   }
   acT('reqs');
 }
+function acUpFormById(sid){ acUpForm(sid); }
 function acUpForm(sid){
   var fms=FDEFS.filter(function(f){return f.who.indexOf('academic')>-1;});
   var s=gS(sid);
@@ -2155,22 +2162,25 @@ function doAcUp(sid,inp){
   var f=inp.files[0];if(!f)return;
   var fid=parseInt(document.getElementById('ac-fsel').value);
   var now=new Date().toISOString();
-  if(!FORMS[sid])FORMS[sid]={};FORMS[sid][fid]={up:true,date:now,file:f.name,by:'academic'};
-  sb.from('form_uploads').upsert({
-    student_id:sid,form_id:fid,
-    uploaded_by:curUser,uploader_role:'academic',
-    file_name:f.name,uploaded_at:now
-  },{onConflict:'student_id,form_id'}).then(function(r){
-    if(r.error)console.log('AcUp error:',r.error.message);
+  var path='student_'+sid+'/form_'+fid+'_'+Date.now()+'_'+f.name;
+  document.getElementById('ac-fup-st').innerHTML='<div class="notif nw" style="margin-top:10px">جاري الرفع...</div>';
+  sb.storage.from('training-forms').upload(path,f,{upsert:true}).then(function(r){
+    if(r.error){document.getElementById('ac-fup-st').innerHTML='<div class="notif ni2">خطأ: '+r.error.message+'</div>';return;}
+    var url=sb.storage.from('training-forms').getPublicUrl(path).data.publicUrl;
+    if(!FORMS[sid])FORMS[sid]={};FORMS[sid][fid]={up:true,date:now,file:f.name,by:'academic',url:url,status:'approved'};
+    sb.from('form_uploads').upsert({
+      student_id:sid,form_id:fid,
+      uploaded_by:curUser,uploader_role:'academic',
+      file_name:f.name,file_url:url,uploaded_at:now,status:'approved'
+    },{onConflict:'student_id,form_id'});
+    if(fid===1){
+      TIMERS[sid]={start:now,approvedBy:curUser};
+      sb.from('training_timers').upsert({student_id:sid,start_date:now,approved_by:curUser});
+      alert('تم الإقرار — بدأ عداد التدريب للطالب '+(gS(sid)?gS(sid).name.split(' ')[0]:sid));
+    }
+    document.getElementById('ac-fup-st').innerHTML='<div class="notif ns" style="margin-top:10px">تم الرفع</div>';
+    setTimeout(function(){closeM();acT('stus');},1200);
   });
-  if(fid===1){
-    var ts=now;
-    TIMERS[sid]={start:ts,approvedBy:curUser};
-    sb.from('training_timers').upsert({student_id:sid,start_date:ts,approved_by:curUser});
-    alert('تم الإقرار بصحة النموذج 1 — بدأ عداد التدريب للطالب '+(gS(sid)?gS(sid).name.split(' ')[0]:sid));
-  }
-  document.getElementById('ac-fup-st').innerHTML='<div class="notif ns" style="margin-top:10px">تم الرفع</div>';
-  setTimeout(function(){closeM();acT('stus');},1200);
 }
 function doAcUp2(fid,inp){
   var f=inp.files[0];if(!f)return;
@@ -2276,16 +2286,20 @@ function doFlUp(sid,inp){
   var f=inp.files[0];if(!f)return;
   var fid=parseInt(document.getElementById('fl-fsel').value);
   var now=new Date().toISOString();
-  if(!FORMS[sid])FORMS[sid]={};FORMS[sid][fid]={up:true,date:now,file:f.name,by:'field'};
-  sb.from('form_uploads').upsert({
-    student_id:sid,form_id:fid,
-    uploaded_by:curUser,uploader_role:'field',
-    file_name:f.name,uploaded_at:now
-  },{onConflict:'student_id,form_id'}).then(function(r){
-    if(r.error)console.log('FlUp error:',r.error.message);
+  var path='student_'+sid+'/form_'+fid+'_'+Date.now()+'_'+f.name;
+  document.getElementById('fl-fup-st').innerHTML='<div class="notif nw" style="margin-top:10px">جاري الرفع...</div>';
+  sb.storage.from('training-forms').upload(path,f,{upsert:true}).then(function(r){
+    if(r.error){document.getElementById('fl-fup-st').innerHTML='<div class="notif ni2">خطأ: '+r.error.message+'</div>';return;}
+    var url=sb.storage.from('training-forms').getPublicUrl(path).data.publicUrl;
+    if(!FORMS[sid])FORMS[sid]={};FORMS[sid][fid]={up:true,date:now,file:f.name,by:'field',url:url,status:'pending'};
+    sb.from('form_uploads').upsert({
+      student_id:sid,form_id:fid,
+      uploaded_by:curUser,uploader_role:'field',
+      file_name:f.name,file_url:url,uploaded_at:now,status:'pending'
+    },{onConflict:'student_id,form_id'});
+    document.getElementById('fl-fup-st').innerHTML='<div class="notif ns" style="margin-top:10px">تم الرفع</div>';
+    setTimeout(function(){closeM();flT('stus');},1200);
   });
-  document.getElementById('fl-fup-st').innerHTML='<div class="notif ns" style="margin-top:10px">تم الرفع</div>';
-  setTimeout(function(){closeM();flT('stus');},1200);
 }
 function doFlUp2(fid,inp){
   var f=inp.files[0];if(!f)return;
@@ -2978,7 +2992,7 @@ async function loadStudentData(uid){
       sb.from('training_timers').select('*').eq('student_id',uid).maybeSingle()
     ]);
     if(reqR.data)REQS[uid]={orgId:reqR.data.org_id,status:reqR.data.status,date:reqR.data.created_at,organizations:reqR.data.organizations};
-    if(formR.data&&formR.data.length){FORMS[uid]={};formR.data.forEach(function(f){FORMS[uid][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};}); }
+    if(formR.data&&formR.data.length){FORMS[uid]={};formR.data.forEach(function(f){FORMS[uid][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,url:f.file_url||'',by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};}); }
     if(timerR.data)TIMERS[uid]={start:timerR.data.start_date,approvedBy:timerR.data.approved_by};
   }catch(e){console.log('loadStu:',e);}
 }
@@ -2995,7 +3009,7 @@ async function loadAcadData(uid){
         sb.from('training_timers').select('*').in('student_id',sids),
         sb.from('requests').select('*,organizations(*)').in('student_id',sids)
       ]);
-      if(fR.data)fR.data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
+      if(fR.data)fR.data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,url:f.file_url||'',by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
       if(tR.data)tR.data.forEach(function(t){TIMERS[t.student_id]={start:t.start_date,approvedBy:t.approved_by};});
       if(rR.data)rR.data.forEach(function(r){REQS[r.student_id]={orgId:r.org_id,status:r.status,organizations:r.organizations};});
     }
@@ -3013,7 +3027,7 @@ async function loadFieldData(uid){
         sb.from('form_uploads').select('*').in('student_id',sids),
         sb.from('training_timers').select('*').in('student_id',sids)
       ]);
-      if(fR.data)fR.data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
+      if(fR.data)fR.data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,url:f.file_url||'',by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
       if(tR.data)tR.data.forEach(function(t){TIMERS[t.student_id]={start:t.start_date,approvedBy:t.approved_by};});
     }
   }catch(e){console.log('loadField:',e);}
