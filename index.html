@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>بوابة التدريب التطبيقي للكلية التطبيقية — جامعة الجوف</title>
+<title>بوابة التدريب الميداني — جامعة الجوف</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -210,28 +210,38 @@ function doLoginSafe(){if(typeof doLogin==='function')doLogin();}
 
 (function(){
   function showLogin(){
+    hideSpinnerSafe();
     var l=document.getElementById('loading');
     var s=document.getElementById('s-login');
     if(l)l.style.display='none';
-    if(s&&!s.classList.contains('active'))s.classList.add('active');
+    document.querySelectorAll('.screen').forEach(function(sc){sc.classList.remove('active');});
+    if(s)s.classList.add('active');
+  }
+  function hideSpinnerSafe(){
+    var sp=document.getElementById('db-sp');
+    if(sp)sp.style.display='none';
   }
   // Check Supabase session after scripts load
   setTimeout(function(){
     if(typeof sb==='undefined'){showLogin();return;}
-    // Restore from sessionStorage
+    // Check sessionStorage for existing session
       var sid=sessionStorage.getItem('jouf_sid');
       var savedRole=sessionStorage.getItem('jouf_role');
       var savedUser=sessionStorage.getItem('jouf_user');
       if(!sid||!savedRole||!savedUser){showLogin();return;}
-      // Verify session in Supabase DB
+      if(typeof sb==='undefined'){showLogin();return;}
+      // Verify session still valid in DB
       sb.from('user_sessions').select('*').eq('session_id',sid).maybeSingle().then(function(r){
-        if(!r.data||new Date(r.data.expires_at)<new Date()){
+        if(!r.data){sessionStorage.clear();showLogin();return;}
+        if(new Date(r.data.expires_at)<new Date()){
+          sb.from('user_sessions').delete().eq('session_id',sid).then(function(){});
           sessionStorage.clear();showLogin();return;
         }
         curRole=savedRole;curUser=savedUser;
-        if(typeof restoreFromSession==='function'){
-          restoreFromSession(savedRole,savedUser,null).catch(function(){sessionStorage.clear();showLogin();});
-        } else {showLogin();}
+        restoreFromSession(savedRole,savedUser,null).catch(function(e){
+          console.log('Restore failed:',e);
+          sessionStorage.clear();showLogin();
+        });
       }).catch(function(){showLogin();});
   },800);
   document.addEventListener('DOMContentLoaded',function(){
@@ -2716,7 +2726,6 @@ async function restoreFromSession(role,username,_session){
     } else {throw new Error('Unknown role');}
   }catch(e){
     console.log('Session restore failed:',e);
-    await sb.auth.signOut();
     window._sessionRestoring=false;
     hideSpinner();
     var l=document.getElementById('loading');if(l)l.style.display='none';
