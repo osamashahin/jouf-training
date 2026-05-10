@@ -1939,7 +1939,8 @@ function stuUpForm(fid){
 function doStuUpForm(fid,inp){
   var f=inp.files[0];if(!f)return;
   var now=new Date().toISOString();
-  var path='student_'+curUser+'/form_'+fid+'_'+Date.now()+'_'+f.name;
+  var ext=f.name.split('.').pop()||'docx';
+  var path='student_'+curUser+'/form_'+fid+'_'+Date.now()+'.'+ext;
   var st=document.getElementById('fup-st-'+fid);
   if(st)st.innerHTML='<div class="notif nw" style="margin-top:10px">جاري الرفع...</div>';
   sb.storage.from('training-forms').upload(path,f,{upsert:true}).then(function(r){
@@ -2171,7 +2172,8 @@ function doAcUp(sid,inp){
   var f=inp.files[0];if(!f)return;
   var fid=parseInt(document.getElementById('ac-fsel').value);
   var now=new Date().toISOString();
-  var path='student_'+sid+'/form_'+fid+'_'+Date.now()+'_'+f.name;
+  var ext2=f.name.split('.').pop()||'docx';
+  var path='student_'+sid+'/form_'+fid+'_acad_'+Date.now()+'.'+ext2;
   document.getElementById('ac-fup-st').innerHTML='<div class="notif nw" style="margin-top:10px">جاري الرفع...</div>';
   sb.storage.from('training-forms').upload(path,f,{upsert:true}).then(function(r){
     if(r.error){document.getElementById('ac-fup-st').innerHTML='<div class="notif ni2">خطأ: '+r.error.message+'</div>';return;}
@@ -2295,7 +2297,8 @@ function doFlUp(sid,inp){
   var f=inp.files[0];if(!f)return;
   var fid=parseInt(document.getElementById('fl-fsel').value);
   var now=new Date().toISOString();
-  var path='student_'+sid+'/form_'+fid+'_'+Date.now()+'_'+f.name;
+  var ext3=f.name.split('.').pop()||'docx';
+  var path='student_'+sid+'/form_'+fid+'_field_'+Date.now()+'.'+ext3;
   document.getElementById('fl-fup-st').innerHTML='<div class="notif nw" style="margin-top:10px">جاري الرفع...</div>';
   sb.storage.from('training-forms').upload(path,f,{upsert:true}).then(function(r){
     if(r.error){document.getElementById('fl-fup-st').innerHTML='<div class="notif ni2">خطأ: '+r.error.message+'</div>';return;}
