@@ -1957,7 +1957,7 @@ function doStuUpForm(fid,inp){
     });
     if(fid===1){
       TIMERS[curUser]={start:now,approvedBy:'student'};
-      sb.from('training_timers').upsert({student_id:curUser,start_date:now,approved_by:curUser});
+      sb.from('training_timers').upsert({student_id:curUser,start_date:now,approved_by:curUser},{onConflict:'student_id'});
     }
     if(st)st.innerHTML='<div class="notif ns" style="margin-top:10px">تم الرفع: '+f.name+'</div>';
     setTimeout(function(){closeM();stuT('forms');},1200);
@@ -1966,9 +1966,19 @@ function doStuUpForm(fid,inp){
 
 function stuStatus(){
   var req=REQS[curUser];var fs=fStatus(curUser);
+  var fd=FORMS[curUser]||{};
+  var approvedForms=Object.keys(fd).filter(function(k){return fd[k].status==='approved';}).length;
+  var pendingForms=Object.keys(fd).filter(function(k){return fd[k].up&&fd[k].status==='pending';}).length;
+  var returnedForms=Object.keys(fd).filter(function(k){return fd[k].status==='returned';}).length;
+
   if(!req)return'<div class="ph"><div class="pt">حالة طلبي</div></div><div class="notif ni2">لم تقدم اي طلب بعد</div>';
   var org=(req.organizations)||(ORGS.find(function(o){return o.id===req.orgId;}))||{name:'جهة التدريب'};
-  var steps=[{l:'تحديد الجهة',d:true},{l:'موافقة المسؤول',d:req.status==='approved'},{l:'رفع المباشرة',d:!!(FORMS[curUser]&&FORMS[curUser][3]&&FORMS[curUser][3].up)},{l:'اتمام التدريب',d:false}];
+  var steps=[
+    {l:'تحديد الجهة',d:true},
+    {l:'موافقة المسؤول',d:req.status==='approved'},
+    {l:'رفع المباشرة',d:approvedForms>0},
+    {l:'اتمام التدريب',d:false}
+  ];
   return'<div class="ph"><div class="pt">حالة طلبي</div></div>'+
   '<div class="card" style="margin-bottom:14px"><div style="padding:16px">'+
   '<div style="display:flex;gap:0;margin-bottom:16px">'+steps.map(function(s,i){
@@ -1978,12 +1988,16 @@ function stuStatus(){
     '<div style="font-size:10px;color:'+(s.d?'#6B3FA0':'#7B6FA0')+'">'+s.l+'</div></div>';
   }).join('')+'</div>'+
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-  ibox('الجهة',org?org.name:'—')+ibox('حالة الطلب','<span class="b '+(req.status==='approved'?'bg':req.status==='pending'?'bw':'br2')+'">'+statusAr(req.status)+'</span>')+
-  ibox('النماذج',fs.up+'/'+fs.tot)+ibox('الاكتمال',fBadge(fs.pct))+
-  '</div></div></div>'+timerH(curUser,curStu.major);
+  ibox('الجهة',org?org.name:'-')+
+  ibox('حالة الطلب','<span class="b '+(req.status==='approved'?'bg':req.status==='pending'?'bw':'br2')+'">'+statusAr(req.status)+'</span>')+
+  ibox('نماذج مقبولة','<span style="color:#15803D;font-weight:700">'+approvedForms+'/9</span>')+
+  (pendingForms>0?ibox('نماذج معلقة','<span style="color:#B45309;font-weight:700">'+pendingForms+' بانتظار المراجعة</span>'):'')+
+  (returnedForms>0?ibox('نماذج مُرجعة','<span style="color:#B91C1C;font-weight:700">'+returnedForms+' مُرجع</span>'):'')+
+  '</div></div></div>'+
+  timerH(curUser,curStu.major)+
+  (returnedForms>0?'<div class="notif ni2">يوجد نماذج مُرجعة — راجع تبويب النماذج لمعرفة السبب</div>':'');
 }
 
-// ===== ACADEMIC SCREEN =====
 function buildAcadScreen(){
   var ac=ACAD_SUP[curUser];
   var el=document.getElementById('s-acad');
@@ -2081,7 +2095,10 @@ function acApproveForm(el){
     if(fid===1){
       var ts=new Date().toISOString();
       TIMERS[sid]={start:ts,approvedBy:curUser};
-      sb.from('training_timers').upsert({student_id:sid,start_date:ts,approved_by:curUser});
+      sb.from('training_timers').upsert(
+        {student_id:sid,start_date:ts,approved_by:curUser},
+        {onConflict:'student_id'}
+      );
     }
     acT('stus');
   });
@@ -2186,7 +2203,7 @@ function doAcUp(sid,inp){
     },{onConflict:'student_id,form_id'});
     if(fid===1){
       TIMERS[sid]={start:now,approvedBy:curUser};
-      sb.from('training_timers').upsert({student_id:sid,start_date:now,approved_by:curUser});
+      sb.from('training_timers').upsert({student_id:sid,start_date:now,approved_by:curUser},{onConflict:'student_id'});
       alert('تم الإقرار — بدأ عداد التدريب للطالب '+(gS(sid)?gS(sid).name.split(' ')[0]:sid));
     }
     document.getElementById('ac-fup-st').innerHTML='<div class="notif ns" style="margin-top:10px">تم الرفع</div>';
@@ -2207,7 +2224,7 @@ function doAcUp2(fid,inp){
   });
   if(fid===1){
     TIMERS[sid]={start:now,approvedBy:curUser};
-    sb.from('training_timers').upsert({student_id:sid,start_date:now,approved_by:curUser});
+    sb.from('training_timers').upsert({student_id:sid,start_date:now,approved_by:curUser},{onConflict:'student_id'});
   }
   document.getElementById('ac-fup2-st').innerHTML='<div class="notif ns" style="margin-top:10px">تم الرفع</div>';
   setTimeout(function(){closeM();},1200);
