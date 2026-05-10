@@ -2480,28 +2480,27 @@ function srchAssignField(v){
 function doAssignField(el){
   var sid=el.getAttribute('data-sid');
   var fid=document.getElementById('asgn-f').value;
-  var fl=FIELD_SUP[fid];
-  if(fl&&fl.students.indexOf(sid)===-1)fl.students.push(sid);
-  // Check if assignment exists and update
+  if(!fid){alert('اختر المشرف اولاً');return;}
+  showSpinner('جاري التعيين...');
   sb.from('assignments').select('*').eq('student_id',sid).maybeSingle().then(function(r){
-    if(r.data){
-      sb.from('assignments').update({field_id:fid}).eq('student_id',sid);
-    } else {
-      sb.from('assignments').insert({student_id:sid,field_id:fid});
-    }
+    var acadId=r.data?r.data.academic_id:null;
+    sb.from('assignments').upsert({student_id:sid,field_id:fid,academic_id:acadId}).then(function(res){
+      if(res.error){hideSpinner();alert('خطأ: '+res.error.message);return;}
+      if(!FIELD_SUP[fid])FIELD_SUP[fid]={name:fid,pass:'',email:'',students:[]};
+      if(FIELD_SUP[fid].students.indexOf(sid)===-1)FIELD_SUP[fid].students.push(sid);
+      hideSpinner();
+      spT('assign');
+    });
   });
-  document.getElementById('asgn-fs').value='';
-  document.getElementById('asgn-fres').innerHTML='';
-  var c=document.getElementById('sp-ct')||document.getElementById('adm-ct');
-  if(c)c.innerHTML=spAssignContent();
 }
 
 function unassignField(el){
   var fid=el.getAttribute('data-fid');var sid=el.getAttribute('data-sid');
-  var fl=FIELD_SUP[fid];if(fl)fl.students=fl.students.filter(function(s){return s!==sid;});
-  sb.from('assignments').update({field_id:null}).eq('student_id',sid);
-  var c=document.getElementById('sp-ct')||document.getElementById('adm-ct');
-  if(c)c.innerHTML=spAssignContent();
+  showSpinner('جاري الحذف...');
+  sb.from('assignments').update({field_id:null}).eq('student_id',sid).then(function(){
+    var fl=FIELD_SUP[fid];if(fl)fl.students=fl.students.filter(function(s){return s!==sid;});
+    hideSpinner();spT('assign');
+  });
 }
 
 function srchAssign(v){
@@ -2519,24 +2518,27 @@ function srchAssign(v){
 }
 function doAssign(el){
   var sid=el.getAttribute('data-sid');
-  var aid=document.getElementById('asgn-a').value;var ac=ACAD_SUP[aid];
-  if(ac&&ac.students.indexOf(sid)===-1)ac.students.push(sid);
-  // Upsert preserving field_id
-  sb.from('assignments').select('field_id').eq('student_id',sid).maybeSingle().then(function(r){
+  var aid=document.getElementById('asgn-a').value;
+  if(!aid){alert('اختر المشرف اولاً');return;}
+  showSpinner('جاري التعيين...');
+  sb.from('assignments').select('*').eq('student_id',sid).maybeSingle().then(function(r){
     var fieldId=r.data?r.data.field_id:null;
-    sb.from('assignments').upsert({student_id:sid,academic_id:aid,field_id:fieldId});
+    sb.from('assignments').upsert({student_id:sid,academic_id:aid,field_id:fieldId}).then(function(res){
+      if(res.error){hideSpinner();alert('خطأ: '+res.error.message);return;}
+      if(!ACAD_SUP[aid])ACAD_SUP[aid]={name:aid,pass:'',email:'',students:[]};
+      if(ACAD_SUP[aid].students.indexOf(sid)===-1)ACAD_SUP[aid].students.push(sid);
+      hideSpinner();
+      spT('assign');
+    });
   });
-  document.getElementById('asgn-s').value='';document.getElementById('asgn-res').innerHTML='';
-  // Refresh
-  var c=document.getElementById('sp-ct')||document.getElementById('adm-ct');
-  if(c)c.innerHTML=spAssignContent();
 }
 function unassign(el){
   var aid=el.getAttribute('data-aid');var sid=el.getAttribute('data-sid');
-  var ac=ACAD_SUP[aid];if(ac)ac.students=ac.students.filter(function(s){return s!==sid;});
-  sb.from('assignments').update({academic_id:null}).eq('student_id',sid);
-  var c=document.getElementById('sp-ct')||document.getElementById('adm-ct');
-  if(c)c.innerHTML=spAssignContent();
+  showSpinner('جاري الحذف...');
+  sb.from('assignments').update({academic_id:null}).eq('student_id',sid).then(function(){
+    var ac=ACAD_SUP[aid];if(ac)ac.students=ac.students.filter(function(s){return s!==sid;});
+    hideSpinner();spT('assign');
+  });
 }
 
 // ===== SUPERVISOR SCREEN =====
