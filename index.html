@@ -2936,11 +2936,6 @@ function adT(tab){
 // ===== EMAILJS =====
 var EJS_SVC='service_jouf',EJS_TPL='template_zgjcla3',EJS_KEY='Eh1cbjs85P-ewPwZg';
 var ejsReady=false;
-function initEJS(){
-  if(typeof emailjs!=='undefined'&&!ejsReady){
-    try{emailjs.init(EJS_KEY);ejsReady=true;}catch(e){}
-  }
-}
 function sendOrgEmail(studentId,orgId){
   initEJS();
   var s=gS(studentId);
@@ -3096,11 +3091,5 @@ async function loadSupData(){
 var EJS_SVC='service_jouf',EJS_TPL='template_zgjcla3',EJS_KEY='Eh1cbjs85P-ewPwZg';
 var ejsReady=false;
 function initEJS(){if(typeof emailjs!=='undefined'&&!ejsReady){try{emailjs.init(EJS_KEY);ejsReady=true;}catch(e){}}}
-function sendOrgEmail(studentId,orgId){
-  initEJS();var s=gS(studentId);
-  var org=ORGS.find(function(o){return o.id===orgId;})||{};
-  if(!org.email||!ejsReady)return;
-  emailjs.send(EJS_SVC,EJS_TPL,{to_email:org.email,org_name:org.name,student_name:s?s.name:'',student_id:studentId,student_major:s?s.major:''});
-}
 </script>
 
