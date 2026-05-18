@@ -2228,11 +2228,20 @@ function acApproveForm(el){
 function acReturnForm(el){
   var sid=el.getAttribute('data-sid');
   var fid=parseInt(el.getAttribute('data-fid'));
-  var reason=prompt('سبب الإرجاع (اختياري):','');
-  sb.from('form_uploads').update({status:'returned',notes:reason||''}).eq('student_id',sid).eq('form_id',fid).then(function(r){
-    if(r.error){alert('خطأ: '+r.error.message);return;}
-    if(FORMS[sid]&&FORMS[sid][fid]){FORMS[sid][fid].status='returned';FORMS[sid][fid].notes=reason;}
-    acT('stus');
+  modal('إرجاع النموذج',
+    '<div style="margin-bottom:8px;font-size:13px;color:#4A2878">نموذج رقم <b>'+fid+'</b> — سيصل للطالب مع الملاحظات</div>'+
+    '<div class="fg2"><div class="flb">الملاحظات / سبب الإرجاع <span style="color:red">*</span></div>'+
+    '<textarea class="fi" id="ac-ret-notes" rows="4" placeholder="اكتب سبب الإرجاع أو النواقص المطلوبة من الطالب..."></textarea></div>',
+    [['إلغاء','closeM()','btn-o'],['إرجاع النموذج','_acDoReturn(\''+sid+'\','+fid+')','btn-r']]);
+}
+function _acDoReturn(sid,fid){
+  var notes=document.getElementById('ac-ret-notes').value.trim();
+  if(!notes){alert('الملاحظات مطلوبة');return;}
+  closeM();showSpinner('جاري الإرجاع...');
+  sb.from('form_uploads').update({status:'returned',notes:notes}).eq('student_id',sid).eq('form_id',fid).then(function(r){
+    if(r.error){hideSpinner();alert('خطأ: '+r.error.message);return;}
+    if(FORMS[sid]&&FORMS[sid][fid]){FORMS[sid][fid].status='returned';FORMS[sid][fid].notes=notes;}
+    hideSpinner();showNotifBanner('تم إرجاع النموذج مع الملاحظات');acT('stus');
   });
 }
 
