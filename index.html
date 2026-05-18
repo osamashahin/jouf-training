@@ -2102,9 +2102,43 @@ function acT(tab){
   document.querySelectorAll('#s-acad .ni').forEach(function(n){n.classList.remove('active');});
   var el=document.getElementById('nav-ac-'+tab);if(el)el.classList.add('active');
   var c=document.getElementById('ac-ct');
-  if(tab==='dash')c.innerHTML=acDash();
-  else if(tab==='stus')c.innerHTML=acStudents();
-  else if(tab==='forms')c.innerHTML=acForms();
+  if(tab==='dash'){
+    var sids=(ACAD_SUP[curUser]&&ACAD_SUP[curUser].students)||[];
+    if(!sids.length){c.innerHTML=acDash();return;}
+    c.innerHTML='<div style="padding:20px;text-align:center;color:#7B6FA0">جاري التحميل...</div>';
+    Promise.all([
+      sb.from('form_uploads').select('*').in('student_id',sids),
+      sb.from('training_timers').select('*').in('student_id',sids)
+    ]).then(function(res){
+      if(res[0].data)res[0].data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,url:f.file_url||'',by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
+      if(res[1].data)res[1].data.forEach(function(t){TIMERS[t.student_id]={start:t.start_date,approvedBy:t.approved_by};});
+      c.innerHTML=acDash();
+    });
+  }
+  else if(tab==='stus'){
+    var sids=(ACAD_SUP[curUser]&&ACAD_SUP[curUser].students)||[];
+    if(!sids.length){c.innerHTML=acStudents();return;}
+    c.innerHTML='<div style="padding:20px;text-align:center;color:#7B6FA0">جاري تحميل النماذج...</div>';
+    Promise.all([
+      sb.from('form_uploads').select('*').in('student_id',sids),
+      sb.from('training_timers').select('*').in('student_id',sids),
+      sb.from('requests').select('*,organizations(*)').in('student_id',sids)
+    ]).then(function(res){
+      if(res[0].data)res[0].data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,url:f.file_url||'',by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
+      if(res[1].data)res[1].data.forEach(function(t){TIMERS[t.student_id]={start:t.start_date,approvedBy:t.approved_by};});
+      if(res[2].data)res[2].data.forEach(function(r){REQS[r.student_id]={orgId:r.org_id,status:r.status,organizations:r.organizations};});
+      c.innerHTML=acStudents();
+    });
+  }
+  else if(tab==='forms'){
+    var sids=(ACAD_SUP[curUser]&&ACAD_SUP[curUser].students)||[];
+    if(!sids.length){c.innerHTML=acForms();return;}
+    c.innerHTML='<div style="padding:20px;text-align:center;color:#7B6FA0">جاري تحميل النماذج...</div>';
+    sb.from('form_uploads').select('*').in('student_id',sids).then(function(res){
+      if(res.data)res.data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,url:f.file_url||'',by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
+      c.innerHTML=acForms();
+    });
+  }
   else if(tab==='reqs')c.innerHTML=acReqs();
 }
 function acDash(){
@@ -2358,9 +2392,39 @@ function flT(tab){
   document.querySelectorAll('#s-field .ni').forEach(function(n){n.classList.remove('active');});
   var el=document.getElementById('nav-fl-'+tab);if(el)el.classList.add('active');
   var c=document.getElementById('fl-ct');
-  if(tab==='dash')c.innerHTML=flDash();
-  else if(tab==='stus')c.innerHTML=flStudents();
-  else if(tab==='forms')c.innerHTML=flForms();
+  var sids=(FIELD_SUP[curUser]&&FIELD_SUP[curUser].students)||[];
+  if(tab==='dash'){
+    if(!sids.length){c.innerHTML=flDash();return;}
+    c.innerHTML='<div style="padding:20px;text-align:center;color:#7B6FA0">جاري التحميل...</div>';
+    Promise.all([
+      sb.from('form_uploads').select('*').in('student_id',sids),
+      sb.from('training_timers').select('*').in('student_id',sids)
+    ]).then(function(res){
+      if(res[0].data)res[0].data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,url:f.file_url||'',by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
+      if(res[1].data)res[1].data.forEach(function(t){TIMERS[t.student_id]={start:t.start_date,approvedBy:t.approved_by};});
+      c.innerHTML=flDash();
+    });
+  }
+  else if(tab==='stus'){
+    if(!sids.length){c.innerHTML=flStudents();return;}
+    c.innerHTML='<div style="padding:20px;text-align:center;color:#7B6FA0">جاري تحميل النماذج...</div>';
+    Promise.all([
+      sb.from('form_uploads').select('*').in('student_id',sids),
+      sb.from('training_timers').select('*').in('student_id',sids)
+    ]).then(function(res){
+      if(res[0].data)res[0].data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,url:f.file_url||'',by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
+      if(res[1].data)res[1].data.forEach(function(t){TIMERS[t.student_id]={start:t.start_date,approvedBy:t.approved_by};});
+      c.innerHTML=flStudents();
+    });
+  }
+  else if(tab==='forms'){
+    if(!sids.length){c.innerHTML=flForms();return;}
+    c.innerHTML='<div style="padding:20px;text-align:center;color:#7B6FA0">جاري تحميل النماذج...</div>';
+    sb.from('form_uploads').select('*').in('student_id',sids).then(function(res){
+      if(res.data)res.data.forEach(function(f){if(!FORMS[f.student_id])FORMS[f.student_id]={};FORMS[f.student_id][f.form_id]={up:true,date:f.uploaded_at,file:f.file_name,url:f.file_url||'',by:f.uploader_role,status:f.status||'pending',notes:f.notes||''};});
+      c.innerHTML=flForms();
+    });
+  }
 }
 function flDash(){
   var fl=FIELD_SUP[curUser];
